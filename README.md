@@ -2,9 +2,7 @@
 Various tools and utilities to interact with [viash](https://viash.io/) using python.
 
 # Installation
-Before installing, it is recommended to create a virtual environment first.
-Learn more about virtual environments [here](https://docs.python.org/3/tutorial/venv.html).
-To install this software, you can do so from the python package index (PyPI)](https://pypi.org/) using `pip`.
+To install pyviash, you can do so from the python package index [PyPI](https://pypi.org/) using `pip`.
 
 ```bash
 pip install viash
