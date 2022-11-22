@@ -43,3 +43,11 @@ docs/_build/
 # pyenv
 .python-version
 
+# Version file
+viash/__version__.py
+
+# Virtual environment
+.venv
+
+# Visual studio code folder
+.vscode
