@@ -18,7 +18,7 @@ pip install .[dev] # Do not forget to quote this if you are using zsh
 By default, PyViash can tested against different python versions (more specifically 3.7 to 3.11) using `tox`. 
 These versions of python must be made available to tox (by adding them to your `PATH` environment variable), for example by installing and enabling them using `pyenv`.
 
-When these 
+Afterwards, running the tests is a matter of executing: 
 ```bash
 tox .
 ```
