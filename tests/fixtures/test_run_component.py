@@ -78,32 +78,6 @@ def test_run_component_executes_subprocess(pytester):
     assert result.ret == 0
 
 
-def test_run_component_file_not_executable_raises(pytester):
-    executable = pytester.makefile("", foo="This is a dummy executable!")
-    executable.chmod(executable.stat().st_mode ^ stat.S_IXUSR)
-    pytester.makepyfile(
-        """
-        import subprocess
-        from pathlib import Path
-
-        meta = {"executable": "foo"}
-
-        def test_loading_run_component(mocker, run_component):
-            mocked = mocker.patch('viash._run.check_output')
-            run_component(["bar"])
-            mocked.assert_called_once_with([Path("foo"), "bar"],
-                                        stderr=subprocess.STDOUT)
-        """
-    )
-    result = pytester.runpytest("-v")
-    result.stdout.fnmatch_lines(
-        [
-            "*PermissionError: foo is not executable.",
-        ]
-    )
-    assert result.ret != 0
-
-
 def test_run_component_executable_does_not_exist_raises(pytester):
     pytester.makepyfile(
         """

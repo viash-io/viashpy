@@ -14,6 +14,4 @@ def run_build_component(
     executable_location = Path(executable_location)
     if not executable_location.is_file():
         raise ValueError(f"{executable_location} does not exist or is not a file.")
-    if not os.access(executable_location, os.X_OK):
-        raise PermissionError(f"{executable_location} is not executable.")
     return check_output([executable_location] + args, stderr=stderr, **popen_kwargs)
