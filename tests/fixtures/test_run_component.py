@@ -1,5 +1,6 @@
 import stat
 
+
 def test_run_component_fixture(testdir):
     """Make sure that pytest accepts our fixture."""
 
