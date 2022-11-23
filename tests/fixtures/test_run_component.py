@@ -91,14 +91,15 @@ def test_run_component_file_not_executable_raises(pytester):
          def test_loading_run_component(mocker, run_component):
              mocked = mocker.patch('viash._run.check_output')
              run_component(["bar"])
-             mocked.assert_called_once_with([Path("{str(executable)}"), "bar"],
+             mocked.assert_called_once_with([Path(r"{str(executable)}"), "bar"],
                                             stderr=subprocess.STDOUT)
         """
     )
     result = pytester.runpytest("-v")
+    print(f"RESULT HERE: {result.stdout} RESULT END")
     result.stdout.fnmatch_lines(
         [
-            f"*PermissionError: {str(executable)} is not executable.",
+            rf"*PermissionError: {str(executable)} is not executable.",
         ]
     )
     assert result.ret != 0
