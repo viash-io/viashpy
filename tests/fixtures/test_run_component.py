@@ -80,7 +80,7 @@ def test_run_component_executes_subprocess(pytester):
 
 def test_run_component_file_not_executable_raises(pytester):
     executable = pytester.makefile("", foo="This is a dummy executable!")
-    executable.chmod(stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH)
+    executable.chmod(executable.stat().st_mode ^ stat.S_IXUSR)
     pytester.makepyfile(
         """
         import subprocess
