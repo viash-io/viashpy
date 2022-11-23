@@ -63,7 +63,7 @@ def test_run_component_executes_subprocess(pytester):
         meta = {"executable": "foo"}
 
         def test_loading_run_component(mocker, run_component):
-            mocked = mocker.patch('viash._run.check_output')
+            mocked = mocker.patch('viashpy._run.check_output')
             run_component(["bar"])
             mocked.assert_called_once_with([Path("foo"), "bar"],
                                         stderr=subprocess.STDOUT)
@@ -87,7 +87,7 @@ def test_run_component_executable_does_not_exist_raises(pytester):
         meta = {"executable": "foo"}
 
         def test_loading_run_component(mocker, run_component):
-            mocked = mocker.patch('viash._run.check_output')
+            mocked = mocker.patch('viashpy._run.check_output')
             run_component(["bar"])
             mocked.assert_called_once_with([Path("foo"), "bar"],
                                         stderr=subprocess.STDOUT)
