@@ -60,12 +60,12 @@ def test_run_component_executes_subprocess(pytester):
          import subprocess
          from pathlib import Path
 
-         meta = {{"executable": "{str(executable)}" }}
+         meta = {{"executable": r"{str(executable)}" }}
 
          def test_loading_run_component(mocker, run_component):
              mocked = mocker.patch('viash._run.check_output')
              run_component(["bar"])
-             mocked.assert_called_once_with([Path("{str(executable)}"), "bar"],
+             mocked.assert_called_once_with([Path(r"{str(executable)}"), "bar"],
                                             stderr=subprocess.STDOUT)
         """
     )
@@ -86,12 +86,12 @@ def test_run_component_file_not_executable_raises(pytester):
          import subprocess
          from pathlib import Path
 
-         meta = {{"executable": "{str(executable)}" }}
+         meta = {{"executable": r"{str(executable)}" }}
 
          def test_loading_run_component(mocker, run_component):
              mocked = mocker.patch('viash._run.check_output')
              run_component(["bar"])
-             mocked.assert_called_once_with([Path("{str(executable)}"), "bar"],
+             mocked.assert_called_once_with([Path(r"{str(executable)}"), "bar"],
                                             stderr=subprocess.STDOUT)
         """
     )
