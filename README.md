@@ -1,11 +1,11 @@
-# PyViash
+# viashpy
 Various tools and utilities to interact with [viash](https://viash.io/) using python.
 
 # Installation
-To install pyviash, you can do so from the python package index [PyPI](https://pypi.org/) using `pip`.
+To install viashpy, you can do so from the python package index [PyPI](https://pypi.org/) using `pip`.
 
 ```bash
-pip install viash
+pip install viashpy
 ```
 
 # Running the tests
@@ -15,7 +15,7 @@ To run the tests, clone the repository and install the development requirements 
 pip install .[dev] # Do not forget to quote this if you are using zsh
 ```
 
-By default, PyViash can tested against different python versions (more specifically 3.7 to 3.11) using `tox`. 
+By default, viashpy can tested against different python versions (more specifically 3.7 to 3.11) using `tox`. 
 These versions of python must be made available to tox (by adding them to your `PATH` environment variable), for example by installing and enabling them using `pyenv`.
 
 Afterwards, running the tests is a matter of executing: 
