@@ -56,17 +56,17 @@ def test_run_component_executes_subprocess(pytester):
     executable.chmod(executable.stat().st_mode | S_IEXEC)
 
     pytester.makepyfile(
-        f"""
-         import subprocess
-         from pathlib import Path
+        """
+        import subprocess
+        from pathlib import Path
 
-         meta = {{"executable": r"{str(executable)}" }}
+        meta = {"executable": "foo"}
 
-         def test_loading_run_component(mocker, run_component):
-             mocked = mocker.patch('viash._run.check_output')
-             run_component(["bar"])
-             mocked.assert_called_once_with([Path(r"{str(executable)}"), "bar"],
-                                            stderr=subprocess.STDOUT)
+        def test_loading_run_component(mocker, run_component):
+            mocked = mocker.patch('viash._run.check_output')
+            run_component(["bar"])
+            mocked.assert_called_once_with([Path("foo"), "bar"],
+                                        stderr=subprocess.STDOUT)
         """
     )
     result = pytester.runpytest("-v")
@@ -79,27 +79,25 @@ def test_run_component_executes_subprocess(pytester):
 
 
 def test_run_component_file_not_executable_raises(pytester):
-    executable = pytester.makefile("", foo="This is a dummy executable!")
-
+    pytester.makefile("", foo="")
     pytester.makepyfile(
-        f"""
-         import subprocess
-         from pathlib import Path
+        """
+        import subprocess
+        from pathlib import Path
 
-         meta = {{"executable": r"{str(executable)}" }}
+        meta = {"executable": "foo"}
 
-         def test_loading_run_component(mocker, run_component):
-             mocked = mocker.patch('viash._run.check_output')
-             run_component(["bar"])
-             mocked.assert_called_once_with([Path(r"{str(executable)}"), "bar"],
-                                            stderr=subprocess.STDOUT)
+        def test_loading_run_component(mocker, run_component):
+            mocked = mocker.patch('viash._run.check_output')
+            run_component(["bar"])
+            mocked.assert_called_once_with([Path("foo"), "bar"],
+                                        stderr=subprocess.STDOUT)
         """
     )
     result = pytester.runpytest("-v")
-    print(f"RESULT HERE: {result.stdout} RESULT END")
     result.stdout.fnmatch_lines(
         [
-            rf"*PermissionError: {str(executable)} is not executable.",
+            "*PermissionError: foo is not executable.",
         ]
     )
     assert result.ret != 0
