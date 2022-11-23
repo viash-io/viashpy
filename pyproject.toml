@@ -3,7 +3,7 @@ requires = ["setuptools>=45", "wheel", "setuptools_scm>=6.2", "setuptools_scm_gi
 build-backend = 'setuptools.build_meta'
 
 [tool.setuptools_scm]
-write_to = "viash/__version__.py"
+write_to = "viashpy/__version__.py"
 
 [tool.black]
 target-version = ['py38', 'py39', 'py310', 'py311']
@@ -15,6 +15,6 @@ exclude = '''
   | build
   | dist
   | \.tox
-  | viash/__version__.py
+  | viashpy/__version__.py
 )
 '''
