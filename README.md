@@ -26,7 +26,7 @@ tox .
 Alternatively, if you wish to test for the python version installed on your system only, you can choose to only test `-e` parameter.
 ```bash
 # Uses python3.7
-tox -e py37
+tox -e py3.7
 ```
 
 # License
