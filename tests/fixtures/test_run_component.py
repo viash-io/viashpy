@@ -1,5 +1,4 @@
-from stat import S_IEXEC
-
+import stat
 
 def test_run_component_fixture(testdir):
     """Make sure that pytest accepts our fixture."""
@@ -53,7 +52,7 @@ def test_run_component_no_meta_variable_raises(testdir):
 
 def test_run_component_executes_subprocess(pytester):
     executable = pytester.makefile("", foo="This is a dummy executable!")
-    executable.chmod(executable.stat().st_mode | S_IEXEC)
+    executable.chmod(executable.stat().st_mode | stat.S_IEXEC)
 
     pytester.makepyfile(
         """
@@ -79,7 +78,8 @@ def test_run_component_executes_subprocess(pytester):
 
 
 def test_run_component_file_not_executable_raises(pytester):
-    pytester.makefile("", foo="")
+    executable = pytester.makefile("", foo="This is a dummy executable!")
+    executable.chmod(stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH)
     pytester.makepyfile(
         """
         import subprocess
