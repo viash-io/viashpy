@@ -1,5 +1,4 @@
 from __future__ import annotations
-import os
 from subprocess import check_output, STDOUT, DEVNULL, PIPE
 from pathlib import Path
 
