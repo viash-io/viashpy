@@ -44,7 +44,7 @@ docs/_build/
 .python-version
 
 # Version file
-viash/__version__.py
+viashpy/__version__.py
 
 # Virtual environment
 .venv
