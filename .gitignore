@@ -51,3 +51,6 @@ viashpy/__version__.py
 
 # Visual studio code folder
 .vscode
+
+# viash binaries
+bin/viash*
