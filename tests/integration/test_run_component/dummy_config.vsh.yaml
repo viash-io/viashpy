@@ -1,0 +1,33 @@
+functionality:
+  name: "test_run_component"
+  namespace: "test_run_component"
+  description: |
+    A dummy component to test the run_component fixture
+  arguments:
+    - name: "--output"
+      alternatives: ["-o"]
+      type: file
+      description: Paths of the output file
+      required: true
+      example: sample_paths
+  resources:
+    - type: python_script
+      text: |
+        with open(par['output'], 'w') as open_output_file:
+          open_output_file.write("foo!")
+    - path: ../../../
+      dest: filiberke
+  test_resources:
+    - type: python_script
+      path: test_script.py
+platforms:
+  - type: docker
+    image: python:3.10
+    test_setup:
+      - type: docker
+        copy: ["filiberke /viashpy"]
+      - type: python
+        packages:
+          - /viashpy
+  - type: native
+  - type: nextflow
