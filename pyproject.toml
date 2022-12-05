@@ -18,3 +18,12 @@ exclude = '''
   | viashpy/__version__.py
 )
 '''
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = [
+    "tests/unittests"
+]
+addopts = [
+    "--import-mode=importlib",
+]

@@ -1,8 +1,8 @@
 import pytest
 import ast
 from textwrap import dedent
-
-pytest_plugins = "pytester"
+from pathlib import Path
+import tarfile
 
 
 @pytest.fixture
@@ -62,3 +62,62 @@ def dummy_config_with_info():
             config: "/lorem/ipsum.vsh.config"
         """
     return config
+
+
+@pytest.fixture(params=["gz", "xz", "bz2"])
+def compression_extension(request):
+    return request.param
+
+
+@pytest.fixture()
+def tarfile_with_one_root_dir(tmp_path, compression_extension):
+    folder_to_add = Path(tmp_path) / "bar"
+    folder_to_add.mkdir()
+    file_to_add = folder_to_add / "foo.txt"
+    with (file_to_add).open("w") as open_file_to_add:
+        open_file_to_add.write("This is a test file.")
+    tar_path = tmp_path / "dummy.tar.gz"
+
+    with tarfile.open(tar_path, f"w:{compression_extension}") as open_tarfile:
+        open_tarfile.add(
+            str(folder_to_add),
+            recursive=True,
+            arcname=folder_to_add.relative_to(tmp_path),
+        )
+    return tar_path
+
+
+@pytest.fixture()
+def tarfile_with_one_root_file(tmp_path, compression_extension):
+    file_to_add = tmp_path / "foo.txt"
+    with (file_to_add).open("w") as open_file_to_add:
+        open_file_to_add.write("This is a test file.")
+
+    tar_path = tmp_path / "dummy.tar.gz"
+    with tarfile.open(tar_path, f"w:{compression_extension}") as open_tarfile:
+        open_tarfile.add(
+            str(file_to_add), recursive=True, arcname=file_to_add.relative_to(tmp_path)
+        )
+    return tar_path
+
+
+@pytest.fixture()
+def tarfile_mixed_contents(tmp_path, compression_extension):
+    folder_to_add = Path(tmp_path) / "root"
+    folder_to_add.mkdir()
+    subfolder = folder_to_add / "bar"
+    subfolder.mkdir()
+    file_to_add = subfolder / "foo.txt"
+    with (file_to_add).open("w") as open_file_to_add:
+        open_file_to_add.write("This is a test file.")
+    tar_path = tmp_path / "dummy.tar.gz"
+    root_file_to_add = folder_to_add / "lorem.txt"
+    with root_file_to_add.open("w") as open_file_to_add:
+        open_file_to_add.write("ipsum")
+    with tarfile.open(tar_path, f"w:{compression_extension}") as open_tarfile:
+        open_tarfile.add(
+            str(folder_to_add),
+            recursive=True,
+            arcname=folder_to_add.relative_to(tmp_path),
+        )
+    return tar_path
