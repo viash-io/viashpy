@@ -72,11 +72,13 @@ def test_run_component_executes_subprocess(
         from pathlib import Path, PosixPath
 
         def test_loading_run_component(mocker, run_component):
-            mocked_check_output = mocker.patch('viashpy._run.check_output')
+            mocked_check_output = mocker.patch('viashpy._run.check_output',
+                                               return_value=b"Some dummy output")
             mocked_path = mocker.patch('viashpy.testing.Path.is_file', return_value=True)
-            run_component(["bar"])
+            stdout = run_component(["bar"])
             mocked_check_output.assert_called_once_with({expected},
                                                         stderr=subprocess.STDOUT)
+            assert stdout == b"Some dummy output"
         """,
         request.getfixturevalue(config_fixture),
         "foo",

@@ -2,6 +2,13 @@
 Changelog
 *********
 
+0.2.1 (3/02/2023)
+=================
+
+Bug fixes
+---------
+* `run_component` now outputs captured stdout and stderr from the component run. 
+
 0.2.0 (5/12/2022)
 ==================
 

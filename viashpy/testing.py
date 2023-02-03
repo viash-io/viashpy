@@ -97,7 +97,7 @@ def run_component(executable, viash_source_config_path, viash_executable):
     if viash_source_config_path.is_file():
 
         def wrapper(args_as_list):
-            viash_run(
+            return viash_run(
                 viash_source_config_path, args_as_list, viash_location=viash_executable
             )
 
@@ -109,6 +109,6 @@ def run_component(executable, viash_source_config_path, viash_executable):
     )
 
     def wrapper(args_as_list):
-        run_build_component(executable, args_as_list)
+        return run_build_component(executable, args_as_list)
 
     return wrapper

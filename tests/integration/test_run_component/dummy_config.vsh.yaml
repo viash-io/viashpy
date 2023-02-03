@@ -10,11 +10,14 @@ functionality:
       description: Paths of the output file
       required: true
       example: sample_paths
+      direction: output
   resources:
     - type: python_script
       text: |
+        import sys
         with open(par['output'], 'w') as open_output_file:
           open_output_file.write("foo!")
+        print("This is a logging statement", flush=True, file=sys.stderr)
     - path: ../../../
       dest: filiberke
   test_resources:
