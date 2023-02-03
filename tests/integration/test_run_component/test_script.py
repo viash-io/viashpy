@@ -12,5 +12,6 @@ def test_run_component(run_component):
     ), "Some output from stdout or stderr should have been captured"
     assert b"This is a logging statement" in captured_output
 
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__], plugins=["viashpy"]))
