@@ -106,11 +106,18 @@ def run_component(caplog, executable, viash_source_config_path, viash_executable
             except CalledProcessError as e:
                 with caplog.at_level(logging.DEBUG):
                     logger = logging.getLogger()
-                    logger.info(f"Captured component output was:\n{e.stdout.decode('utf-8')}")
-                    pytest.fail(f"The component exited with exitcode {e.returncode}.", pytrace=False)
+                    logger.info(
+                        f"Captured component output was:\n{e.stdout.decode('utf-8')}"
+                    )
+                    pytest.fail(
+                        f"The component exited with exitcode {e.returncode}.",
+                        pytrace=False,
+                    )
+
         return wrapper
 
     if viash_source_config_path.is_file():
+
         @run_and_handle_errors
         def wrapper(args_as_list):
             return viash_run(

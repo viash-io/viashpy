@@ -116,9 +116,14 @@ def test_run_component_executable_does_not_exist_raises(
     assert result.ret != 0
 
 
-def test_run_component_fails_logging(pytester, makepyfile_and_add_meta, dummy_config_with_info):
+def test_run_component_fails_logging(
+    pytester, makepyfile_and_add_meta, dummy_config_with_info
+):
 
-    executable = pytester.makefile("", foo="#!/bin/sh\npython -c 'import sys; raise RuntimeError(\"This script should fail\")'")
+    executable = pytester.makefile(
+        "",
+        foo="#!/bin/sh\npython -c 'import sys; raise RuntimeError(\"This script should fail\")'",
+    )
     executable.chmod(executable.stat().st_mode | stat.S_IEXEC)
 
     makepyfile_and_add_meta(
