@@ -2,6 +2,10 @@
 Changelog
 *********
 
+0.3.1 (6/06/2023)
+================
+* `run_component`: fix a bug where `pytest.fail` was used when running a component failed instead of using `CalledProcessError`.
+
 0.3.0 (6/06/2023)
 =================
 * `run_component`: when the component fails, stack traces from helper functions are no longer shown.

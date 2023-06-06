@@ -101,6 +101,7 @@ def run_component(caplog, executable, viash_source_config_path, viash_executable
     def run_and_handle_errors(function_to_run):
         @wraps(function_to_run)
         def wrapper(*args, **kwargs):
+            __tracebackhide__ = True
             try:
                 return function_to_run(*args, **kwargs)
             except CalledProcessError as e:
@@ -109,10 +110,10 @@ def run_component(caplog, executable, viash_source_config_path, viash_executable
                     logger.info(
                         f"Captured component output was:\n{e.stdout.decode('utf-8')}"
                     )
-                    pytest.fail(
-                        f"The component exited with exitcode {e.returncode}.",
-                        pytrace=False,
-                    )
+                    # Create a new CalledProcessError object. This removes verbosity from the original object
+                    raise CalledProcessError(
+                        e.returncode, e.cmd, output=None, stderr=None
+                    ) from None
 
         return wrapper
 
