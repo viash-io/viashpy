@@ -63,13 +63,10 @@ def test_run_component_no_meta_variable_raises(pytester):
 def test_run_component_executes_subprocess(
     request, pytester, makepyfile_and_add_meta, config_fixture, expected
 ):
-    executable = pytester.makefile("", foo="This is a dummy executable!")
-    executable.chmod(executable.stat().st_mode | stat.S_IEXEC)
-
     makepyfile_and_add_meta(
         f"""
         import subprocess
-        from pathlib import Path, PosixPath
+        from pathlib import Path
 
         def test_loading_run_component(mocker, run_component):
             mocked_check_output = mocker.patch('viashpy._run.check_output',
@@ -116,3 +113,42 @@ def test_run_component_executable_does_not_exist_raises(
         ]
     )
     assert result.ret != 0
+
+
+def test_run_component_fails_logging(
+    pytester, makepyfile_and_add_meta, dummy_config_with_info
+):
+    executable = pytester.makefile(
+        "",
+        foo="#!/bin/sh\npython -c 'import sys; raise RuntimeError(\"This script should fail\")'",
+    )
+    executable.chmod(executable.stat().st_mode | stat.S_IEXEC)
+
+    makepyfile_and_add_meta(
+        """
+        import subprocess
+        from pathlib import Path, PosixPath
+
+        def test_loading_run_component(mocker, run_component):
+            mocked_path = mocker.patch('viashpy.testing.Path.is_file', return_value=True)
+            stdout = run_component(["bar"])
+        """,
+        dummy_config_with_info,
+        executable,
+    )
+    result = pytester.runpytest()
+    # Check if output from component is shown on error
+    result.stdout.fnmatch_lines(
+        [
+            "*FAILED test_run_component_fails_logging.py::test_loading_run_component*",
+        ]
+    )
+    result.stdout.fnmatch_lines(
+        [
+            "*This script should fail*",
+        ]
+    )
+    # Check if stack traces are hidden
+    result.stdout.no_fnmatch_line("*def wrapper*")
+    result.stdout.no_fnmatch_line("*def run_component*")
+    assert result.ret == 1

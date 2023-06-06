@@ -3,6 +3,8 @@ import logging
 from ._run import run_build_component, viash_run
 from .config import read_viash_config
 from pathlib import Path
+from functools import wraps
+from subprocess import CalledProcessError
 
 logger = logging.Logger(__name__)
 
@@ -79,7 +81,7 @@ def viash_source_config(viash_source_config_path):
 
 
 @pytest.fixture
-def run_component(executable, viash_source_config_path, viash_executable):
+def run_component(caplog, executable, viash_source_config_path, viash_executable):
     """
     Returns a function that allows the user to run a viash component.
     The function will use 'viash run' to execute the component or run
@@ -94,8 +96,29 @@ def run_component(executable, viash_source_config_path, viash_executable):
     tests using 'viash test'), the build component executable will be used
     instead.
     """
+    __tracebackhide__ = True
+
+    def run_and_handle_errors(function_to_run):
+        @wraps(function_to_run)
+        def wrapper(*args, **kwargs):
+            try:
+                return function_to_run(*args, **kwargs)
+            except CalledProcessError as e:
+                with caplog.at_level(logging.DEBUG):
+                    logger = logging.getLogger()
+                    logger.info(
+                        f"Captured component output was:\n{e.stdout.decode('utf-8')}"
+                    )
+                    pytest.fail(
+                        f"The component exited with exitcode {e.returncode}.",
+                        pytrace=False,
+                    )
+
+        return wrapper
+
     if viash_source_config_path.is_file():
 
+        @run_and_handle_errors
         def wrapper(args_as_list):
             return viash_run(
                 viash_source_config_path, args_as_list, viash_location=viash_executable
@@ -108,6 +131,7 @@ def run_component(executable, viash_source_config_path, viash_executable):
         "Assuming test script is run from 'viash test' or 'viash_test'."
     )
 
+    @run_and_handle_errors
     def wrapper(args_as_list):
         return run_build_component(executable, args_as_list)
 
