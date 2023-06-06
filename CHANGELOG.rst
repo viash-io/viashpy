@@ -6,7 +6,7 @@ Changelog
 =================
 * `run_component`: when the component fails, stack traces from helper functions are no longer shown.
 
-*  `run_component`: component output captured from stderr and stdout is added to pytest output.
+* `run_component`: component output captured from stderr and stdout is added to pytest output.
 
 0.2.1 (3/02/2023)
 =================
