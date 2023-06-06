@@ -152,3 +152,59 @@ def test_run_component_fails_logging(
     result.stdout.no_fnmatch_line("*def wrapper*")
     result.stdout.no_fnmatch_line("*def run_component*")
     assert result.ret == 1
+
+
+@pytest.mark.parametrize(
+    "message_to_check, expected_outcome, expected_exitcode",
+    [
+        (
+            "RuntimeError: This script should fail",
+            "*test_run_component_fails_capturing.py::test_loading_run_component PASSED*",
+            0,
+        ),
+        (
+            "something_something_this_will_not_work",
+            "*test_run_component_fails_capturing.py::test_loading_run_component FAILED*",
+            1,
+        ),
+    ],
+)
+def test_run_component_fails_capturing(
+    pytester,
+    makepyfile_and_add_meta,
+    dummy_config_with_info,
+    message_to_check,
+    expected_outcome,
+    expected_exitcode,
+):
+    executable = pytester.makefile(
+        "",
+        foo="#!/bin/sh\npython -c 'import sys; raise RuntimeError(\"This script should fail\")'",
+    )
+    executable.chmod(executable.stat().st_mode | stat.S_IEXEC)
+
+    makepyfile_and_add_meta(
+        f"""
+        import subprocess
+        import pytest
+        import re
+        from pathlib import Path
+
+        def test_loading_run_component(mocker, run_component):
+            mocked_path = mocker.patch('viashpy.testing.Path.is_file', return_value=True)
+            with pytest.raises(subprocess.CalledProcessError) as e:
+                run_component(["bar"])
+            assert re.search(r"{message_to_check}", e.value.stdout.decode('utf-8'))
+        """,
+        dummy_config_with_info,
+        executable,
+    )
+    result = pytester.runpytest("-v")
+    # Check if output from component is shown on error
+    result.stdout.fnmatch_lines([expected_outcome])
+    if expected_exitcode == 0:
+        result.stdout.no_fnmatch_line("*This script should fail*")
+    # Check if stack traces are hidden
+    result.stdout.no_fnmatch_line("*def wrapper*")
+    result.stdout.no_fnmatch_line("*def run_component*")
+    assert result.ret == expected_exitcode

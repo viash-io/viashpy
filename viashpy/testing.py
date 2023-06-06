@@ -111,9 +111,7 @@ def run_component(caplog, executable, viash_source_config_path, viash_executable
                         f"Captured component output was:\n{e.stdout.decode('utf-8')}"
                     )
                     # Create a new CalledProcessError object. This removes verbosity from the original object
-                    raise CalledProcessError(
-                        e.returncode, e.cmd, output=None, stderr=None
-                    ) from None
+                    raise e.with_traceback(None) from None
 
         return wrapper
 
