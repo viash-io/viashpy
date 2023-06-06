@@ -63,7 +63,6 @@ def test_run_component_no_meta_variable_raises(pytester):
 def test_run_component_executes_subprocess(
     request, pytester, makepyfile_and_add_meta, config_fixture, expected
 ):
-
     makepyfile_and_add_meta(
         f"""
         import subprocess
@@ -119,7 +118,6 @@ def test_run_component_executable_does_not_exist_raises(
 def test_run_component_fails_logging(
     pytester, makepyfile_and_add_meta, dummy_config_with_info
 ):
-
     executable = pytester.makefile(
         "",
         foo="#!/bin/sh\npython -c 'import sys; raise RuntimeError(\"This script should fail\")'",
