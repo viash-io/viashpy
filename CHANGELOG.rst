@@ -2,16 +2,25 @@
 Changelog
 *********
 
-0.3.2 (6/06/2023)
+0.3.2 (7/06/2023)
 =================
+
+Bug fixes
+---------
 * `run_component`: fixed adding the captured output to `CalledProcessError` object when a component execution fails. 
 
 0.3.1 (6/06/2023)
 ================
+
+Bug fixes
+---------
 * `run_component`: fix a bug where `pytest.fail` was used when running a component failed instead of using `CalledProcessError`.
 
 0.3.0 (6/06/2023)
 =================
+
+Breaking changes
+----------------
 * `run_component`: when the component fails, stack traces from helper functions are no longer shown.
 
 * `run_component`: component output captured from stderr and stdout is added to pytest output.
