@@ -25,9 +25,11 @@ def run_build_component(
         raise FileNotFoundError(
             f"{executable_location} does not exist or is not a file."
         )
-    return check_output([executable_location]
-                        + _add_cpu_and_memory(args, cpus, memory_gb, "---"),
-                        stderr=stderr, **popen_kwargs)
+    return check_output(
+        [executable_location] + _add_cpu_and_memory(args, cpus, memory_gb, "---"),
+        stderr=stderr,
+        **popen_kwargs,
+    )
 
 
 def viash_run(
@@ -46,5 +48,6 @@ def viash_run(
     return check_output(
         [viash_location, "run", config, "--"]
         + _add_cpu_and_memory(args, cpus, memory_gb, "--"),
-        stderr=stderr, **popen_kwargs
+        stderr=stderr,
+        **popen_kwargs,
     )

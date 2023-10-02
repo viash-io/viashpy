@@ -60,6 +60,7 @@ def meta_attribute_getter(meta, test_module):
                 f"Could not find '{attr}' key in 'meta' variable of test module {test_module}. "
                 "Please make sure it is defined."
             ) from e
+
     return get_meta_attribute
 
 
@@ -105,7 +106,9 @@ def viash_source_config(viash_source_config_path):
 
 
 @pytest.fixture
-def run_component(caplog, executable, viash_source_config_path, viash_executable, cpus, memory_gb):
+def run_component(
+    caplog, executable, viash_source_config_path, viash_executable, cpus, memory_gb
+):
     """
     Returns a function that allows the user to run a viash component.
     The function will use 'viash run' to execute the component or run
@@ -144,7 +147,11 @@ def run_component(caplog, executable, viash_source_config_path, viash_executable
         @run_and_handle_errors
         def wrapper(args_as_list):
             return viash_run(
-                viash_source_config_path, args_as_list, viash_location=viash_executable, cpus=cpus, memory_gb=memory_gb
+                viash_source_config_path,
+                args_as_list,
+                viash_location=viash_executable,
+                cpus=cpus,
+                memory_gb=memory_gb,
             )
 
         return wrapper
@@ -156,6 +163,8 @@ def run_component(caplog, executable, viash_source_config_path, viash_executable
 
     @run_and_handle_errors
     def wrapper(args_as_list):
-        return run_build_component(executable, args_as_list, cpus=cpus, memory_gb=memory_gb)
+        return run_build_component(
+            executable, args_as_list, cpus=cpus, memory_gb=memory_gb
+        )
 
     return wrapper
