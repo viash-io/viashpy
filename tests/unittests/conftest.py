@@ -7,17 +7,25 @@ import tarfile
 
 @pytest.fixture
 def makepyfile_and_add_meta(pytester, write_config):
-    def wrapper(test_module_contents, viash_config, viash_executable):
+    def wrapper(test_module_contents, viash_config, viash_executable, cpu=None, memory_gb=None):
         config_file = write_config(viash_config)
-        to_insert = f"""\
-             try:
-                meta["config"] = "{str(config_file)}"
-             except NameError:
-                meta = {{"config": "{str(config_file)}"}}
-             meta["executable"] = "{viash_executable}"
-             """
+        to_insert = dedent(f"""\
+        try:
+            meta["config"] = "{str(config_file)}"
+        except NameError:
+            meta = {{"config": "{str(config_file)}"}}
+        meta["executable"] = "{viash_executable}"
+        """)
+        if cpu:
+            to_insert += dedent(f"""\
+            meta["cpus"] = "{cpu}"
+            """)
+        if memory_gb:
+            to_insert += dedent(f"""\
+            meta["memory_gb"] = "{memory_gb}"
+            """)
 
-        parsed_to_insert = ast.parse(dedent(to_insert))
+        parsed_to_insert = ast.parse(to_insert)
         parsed_module_contents = ast.parse(dedent(test_module_contents))
         i = 0
         for i, elem in enumerate(parsed_module_contents.body):

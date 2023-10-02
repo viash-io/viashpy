@@ -2,6 +2,19 @@
 Changelog
 *********
 
+0.4.0 (2/10/2023)
+=================
+
+New functionality
+-----------------
+
+* `run_component` now passes the `cpus` or `memory_gb` keys,
+  defined in the `meta` dictionairy of the test module, as memory and cpu contraints
+  to the executed component. The `cpus` and `memory_gb` keys can be set by
+  using `viash (ns) test` with `--cpus` or `--memory` respectively.
+
+* Added `memory_gb` and `cpus` fixtures.
+
 0.3.2 (07/06/2023)
 =================
 

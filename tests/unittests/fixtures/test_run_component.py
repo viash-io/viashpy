@@ -53,16 +53,21 @@ def test_run_component_no_meta_variable_raises(pytester):
     assert result.ret != 0
 
 
+@pytest.mark.parametrize('memory', [None, 6])
+@pytest.mark.parametrize('cpu', [None, 2])
 @pytest.mark.parametrize(
-    "config_fixture, expected",
+    "config_fixture, expected, arg_prefix",
     [
-        ("dummy_config", '["viash", "run", Path(meta["config"]), "--", "bar"]'),
-        ("dummy_config_with_info", '[Path("foo"), "bar"]'),
+        ("dummy_config", '["viash", "run", Path(meta["config"]), "--", "bar"%s%s]', '--'),
+        ("dummy_config_with_info", '[Path("foo"), "bar"%s%s]', '---'),
     ],
 )
 def test_run_component_executes_subprocess(
-    request, pytester, makepyfile_and_add_meta, config_fixture, expected
+    request, pytester, makepyfile_and_add_meta, memory, cpu, config_fixture, expected, arg_prefix
 ):
+    format_string = (f', "{arg_prefix}cpus", "{cpu}"' if cpu else '',
+                     f', "{arg_prefix}memory", "{memory}GB"' if memory else '')
+    expected = expected % format_string
     makepyfile_and_add_meta(
         f"""
         import subprocess
@@ -79,6 +84,8 @@ def test_run_component_executes_subprocess(
         """,
         request.getfixturevalue(config_fixture),
         "foo",
+        cpu=cpu,
+        memory_gb=memory
     )
     result = pytester.runpytest("-v")
     result.stdout.fnmatch_lines(
