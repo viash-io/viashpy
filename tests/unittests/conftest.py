@@ -23,7 +23,7 @@ def makepyfile_and_add_meta(pytester, write_config):
         if cpu:
             to_insert += dedent(
                 f"""\
-            meta["cpus"] = "{cpu}"
+            meta["cpus"] = {cpu}
             """
             )
         if memory_gb:

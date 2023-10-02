@@ -5,7 +5,9 @@ from pathlib import Path
 
 def _add_cpu_and_memory(args, cpus, memory_gb, arg_prefix):
     if cpus:
-        args += [f"{arg_prefix}cpus", cpus]
+        # Must be a string because subprocess.check_output
+        # only works with strings.
+        args += [f"{arg_prefix}cpus", str(cpus)]
     if memory_gb:
         args += [f"{arg_prefix}memory", f"{memory_gb}GB"]
     return args
