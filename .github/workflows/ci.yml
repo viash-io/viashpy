@@ -11,7 +11,7 @@ jobs:
       matrix:
         tox-env: [black, flake8]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Using Python 3.10
       uses: actions/setup-python@v4
       with:
@@ -28,7 +28,7 @@ jobs:
         python-version: ["3.9", "3.10", "3.11"]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
@@ -40,7 +40,7 @@ jobs:
   integration_tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Fetch viash
       run: |
         bin/init -n
