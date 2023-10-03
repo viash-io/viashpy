@@ -111,6 +111,8 @@ def test_run_component_different_memory_specification_warnings(
         """,
         dummy_config,
         "foo",
+        memory_pb=memory_pb,
+        memory_tb=memory_tb,
         memory_gb=memory_gb,
         memory_mb=memory_mb,
         memory_kb=memory_kb,

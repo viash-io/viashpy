@@ -12,6 +12,8 @@ def makepyfile_and_add_meta(pytester, write_config):
         viash_config,
         viash_executable,
         cpu=None,
+        memory_pb=None,
+        memory_tb=None,        
         memory_gb=None,
         memory_mb=None,
         memory_kb=None,
@@ -34,6 +36,8 @@ def makepyfile_and_add_meta(pytester, write_config):
             """
             )
         memory_specifiers = {
+            "memory_pb": memory_pb,
+            "memory_tb": memory_tb,
             "memory_gb": memory_gb,
             "memory_mb": memory_mb,
             "memory_kb": memory_kb,
