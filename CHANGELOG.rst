@@ -8,12 +8,12 @@ Changelog
 New functionality
 -----------------
 
-* `run_component` now passes the `cpus`, `memory_b`, `memory_kb`, `memory_mb` `memory_gb`, 
+* `run_component` now passes the `cpus`, `memory_b`, `memory_kb`, `memory_mb` `memory_gb`, `memory_tb`, `memory_pb`, 
   `memory_tb`, `memory_pb` keys, defined in the `meta` dictionairy of the test module, 
   as memory and cpu contraints to the executed component. The `cpus` and all memory keys
   can be set by using `viash (ns) test` with `--cpus` or `--memory` respectively.
   The memory and cpu fields can also be set to a hardcoded value in the test script. In this case,
-  care should be taken to only specify one of `memory_b`, `memory_kb`, `memory_mb` `memory_gb`. 
+  care should be taken to only specify one of `memory_b`, `memory_kb`, `memory_mb`, `memory_gb`, `memory_tb`, `memory_pb`. 
   If more than one value for memory resources are defined and a conflict exists between the values, 
   the value from the largest unit of measure is used.
 
