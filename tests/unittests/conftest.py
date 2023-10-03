@@ -8,7 +8,14 @@ import tarfile
 @pytest.fixture
 def makepyfile_and_add_meta(pytester, write_config):
     def wrapper(
-        test_module_contents, viash_config, viash_executable, cpu=None, memory_gb=None
+        test_module_contents,
+        viash_config,
+        viash_executable,
+        cpu=None,
+        memory_gb=None,
+        memory_mb=None,
+        memory_kb=None,
+        memory_b=None,
     ):
         config_file = write_config(viash_config)
         to_insert = dedent(
@@ -26,12 +33,19 @@ def makepyfile_and_add_meta(pytester, write_config):
             meta["cpus"] = {cpu}
             """
             )
-        if memory_gb:
-            to_insert += dedent(
-                f"""\
-            meta["memory_gb"] = "{memory_gb}"
-            """
-            )
+        memory_specifiers = {
+            "memory_gb": memory_gb,
+            "memory_mb": memory_mb,
+            "memory_kb": memory_kb,
+            "memory_b": memory_b,
+        }
+        for memory_specifier, memory_value in memory_specifiers.items():
+            if memory_value:
+                to_insert += dedent(
+                    f"""\
+                meta["{memory_specifier}"] = {memory_value}
+                """
+                )
 
         parsed_to_insert = ast.parse(to_insert)
         parsed_module_contents = ast.parse(dedent(test_module_contents))

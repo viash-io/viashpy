@@ -1,10 +1,11 @@
 import pytest
 import logging
-from ._run import run_build_component, viash_run
+from ._run import run_build_component, viash_run, tobytesconverter
 from .config import read_viash_config
 from pathlib import Path
 from functools import wraps
 from subprocess import CalledProcessError
+import warnings
 
 logger = logging.Logger(__name__)
 
@@ -43,11 +44,37 @@ def cpus(meta_attribute_getter):
 
 
 @pytest.fixture
-def memory_gb(meta_attribute_getter):
-    try:
-        return meta_attribute_getter("memory_gb")
-    except KeyError:
-        return None
+def memory_bytes(meta_attribute_getter):
+    all_memory_attributes = {}
+    for suffix in tobytesconverter.AVAILABLE_UNITS():
+        try:
+            memory_value = meta_attribute_getter(f"memory_{suffix.lower()}")
+            assert isinstance(memory_value, int) or isinstance(
+                memory_value, float
+            ), "The values for the memory resources set in the `meta` dictionairy must be floats or integers."
+            all_memory_attributes[suffix] = memory_value
+        except KeyError:
+            pass
+    if not all_memory_attributes:
+        return
+    memory_bytes = {
+        suffix: tobytesconverter(memory, suffix)
+        for suffix, memory in all_memory_attributes.items()
+    }
+    if len(set(memory_bytes.values())) > 1:
+        warnings.warn(
+            "Different values were defined in the 'meta' dictionairy that "
+            "limit memory, choosing the one with the largest unit."
+        )
+        largest_unit_value = None
+        for unit in tobytesconverter.AVAILABLE_UNITS():
+            try:
+                largest_unit_value = memory_bytes[unit]
+            except KeyError:
+                pass
+        return f"{int(largest_unit_value)}B"
+    (_, unit_value), *_ = memory_bytes.items()
+    return f"{int(unit_value)}B"
 
 
 @pytest.fixture
@@ -107,7 +134,7 @@ def viash_source_config(viash_source_config_path):
 
 @pytest.fixture
 def run_component(
-    caplog, executable, viash_source_config_path, viash_executable, cpus, memory_gb
+    caplog, executable, viash_source_config_path, viash_executable, cpus, memory_bytes
 ):
     """
     Returns a function that allows the user to run a viash component.
@@ -151,7 +178,7 @@ def run_component(
                 args_as_list,
                 viash_location=viash_executable,
                 cpus=cpus,
-                memory_gb=memory_gb,
+                memory=memory_bytes,
             )
 
         return wrapper
@@ -164,7 +191,7 @@ def run_component(
     @run_and_handle_errors
     def wrapper(args_as_list):
         return run_build_component(
-            executable, args_as_list, cpus=cpus, memory_gb=memory_gb
+            executable, args_as_list, cpus=cpus, memory=memory_bytes
         )
 
     return wrapper

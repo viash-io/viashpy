@@ -19,14 +19,7 @@ def test_run_component_fixture(pytester, makepyfile_and_add_meta, dummy_config):
 
     # run pytest with the following cmd args
     result = pytester.runpytest("-v")
-
-    # fnmatch_lines does an assertion internally
-    result.stdout.fnmatch_lines(
-        [
-            "*::test_loading_run_component PASSED*",
-        ]
-    )
-    assert result.ret == 0
+    result.assert_outcomes(passed=1)
 
 
 def test_run_component_no_meta_variable_raises(pytester):
@@ -53,7 +46,78 @@ def test_run_component_no_meta_variable_raises(pytester):
     assert result.ret != 0
 
 
-@pytest.mark.parametrize("memory", [None, 6])
+@pytest.mark.parametrize(
+    "memory_gb, memory_mb, memory_kb, memory_b, expected_bytes, expected_warning",
+    [
+        (None, None, None, None, None, False),  # Not specified
+        (6, 6144, 6291456, None, 6442450944, False),  # Memory specified and the same
+        (
+            3,
+            6144,
+            6291456,
+            None,
+            3221225472,
+            True,
+        ),  # Memory specified and different, pick the largest
+        (6, None, None, None, 6442450944, False),  # Only one specified
+        (6.5, None, None, None, 6979321856, False),
+        (3.5, 6144, 6291456, None, 3758096384, True),
+        (6, 6144.5, 6291456, None, 6442450944, True),
+    ],
+)
+def test_run_component_different_memory_specification_warnings(
+    dummy_config,
+    pytester,
+    makepyfile_and_add_meta,
+    memory_gb,
+    memory_mb,
+    memory_kb,
+    memory_b,
+    expected_bytes,
+    expected_warning,
+):
+    expected_memory_args = ""
+    if any([memory_gb, memory_mb, memory_kb, memory_b]):
+        expected_memory_args = f', "--memory", "{expected_bytes}B"'
+    expected = (
+        '["viash", "run", Path(meta["config"]), "--", "bar"%s]' % expected_memory_args
+    )
+    makepyfile_and_add_meta(
+        f"""
+        import subprocess
+        from pathlib import Path
+
+        def test_loading_run_component(mocker, run_component):
+            mocked_check_output = mocker.patch('viashpy._run.check_output',
+                                               return_value=b"Some dummy output")
+            mocked_path = mocker.patch('viashpy.testing.Path.is_file', return_value=True)
+            stdout = run_component(["bar"])
+            mocked_check_output.assert_called_once_with({expected},
+                                                        stderr=subprocess.STDOUT)
+            assert stdout == b"Some dummy output"
+        """,
+        dummy_config,
+        "foo",
+        memory_gb=memory_gb,
+        memory_mb=memory_mb,
+        memory_kb=memory_kb,
+        memory_b=memory_b,
+    )
+    result = pytester.runpytest()
+    expected_outcome_dict = (
+        {"passed": 1, "warnings": 1} if expected_warning else {"passed": 1}
+    )
+    result.assert_outcomes(**expected_outcome_dict)
+    if expected_warning:
+        result.stdout.fnmatch_lines(
+            [
+                "*Different values were defined in the 'meta' dictionairy that limit memory, choosing the one with the largest unit.*"
+            ]
+        )
+    assert result.ret == 0
+
+
+@pytest.mark.parametrize("memory, expected_bytes", [(None, None), (6, 6442450944)])
 @pytest.mark.parametrize("cpu", [None, 2])
 @pytest.mark.parametrize(
     "config_fixture, expected, arg_prefix",
@@ -71,6 +135,7 @@ def test_run_component_executes_subprocess(
     pytester,
     makepyfile_and_add_meta,
     memory,
+    expected_bytes,
     cpu,
     config_fixture,
     expected,
@@ -78,7 +143,7 @@ def test_run_component_executes_subprocess(
 ):
     format_string = (
         f', "{arg_prefix}cpus", "{cpu}"' if cpu else "",
-        f', "{arg_prefix}memory", "{memory}GB"' if memory else "",
+        f', "{arg_prefix}memory", "{expected_bytes}B"' if memory else "",
     )
     expected = expected % format_string
     makepyfile_and_add_meta(
@@ -101,12 +166,7 @@ def test_run_component_executes_subprocess(
         memory_gb=memory,
     )
     result = pytester.runpytest("-v")
-    result.stdout.fnmatch_lines(
-        [
-            "*::test_loading_run_component PASSED*",
-        ]
-    )
-    assert result.ret == 0
+    result.assert_outcomes(passed=1)
 
 
 def test_run_component_executable_does_not_exist_raises(
@@ -157,12 +217,8 @@ def test_run_component_fails_logging(
         executable,
     )
     result = pytester.runpytest()
+    result.assert_outcomes(failed=1)
     # Check if output from component is shown on error
-    result.stdout.fnmatch_lines(
-        [
-            "*FAILED test_run_component_fails_logging.py::test_loading_run_component*",
-        ]
-    )
     result.stdout.fnmatch_lines(
         [
             "*This script should fail*",
@@ -171,21 +227,20 @@ def test_run_component_fails_logging(
     # Check if stack traces are hidden
     result.stdout.no_fnmatch_line("*def wrapper*")
     result.stdout.no_fnmatch_line("*def run_component*")
-    assert result.ret == 1
 
 
 @pytest.mark.parametrize(
-    "message_to_check, expected_outcome, expected_exitcode",
+    "message_to_check, expected_outcome, should_fail",
     [
         (
             "RuntimeError: This script should fail",
             "*test_run_component_fails_capturing.py::test_loading_run_component PASSED*",
-            0,
+            False,
         ),
         (
             "something_something_this_will_not_work",
             "*test_run_component_fails_capturing.py::test_loading_run_component FAILED*",
-            1,
+            True,
         ),
     ],
 )
@@ -195,7 +250,7 @@ def test_run_component_fails_capturing(
     dummy_config_with_info,
     message_to_check,
     expected_outcome,
-    expected_exitcode,
+    should_fail,
 ):
     executable = pytester.makefile(
         "",
@@ -220,11 +275,11 @@ def test_run_component_fails_capturing(
         executable,
     )
     result = pytester.runpytest("-v")
+    expected_outcome_dict = {"failed": 1} if should_fail else {"passed": 1}
+    result.assert_outcomes(**expected_outcome_dict)
+
     # Check if output from component is shown on error
     result.stdout.fnmatch_lines([expected_outcome])
-    if expected_exitcode == 0:
-        result.stdout.no_fnmatch_line("*This script should fail*")
     # Check if stack traces are hidden
     result.stdout.no_fnmatch_line("*def wrapper*")
     result.stdout.no_fnmatch_line("*def run_component*")
-    assert result.ret == expected_exitcode
