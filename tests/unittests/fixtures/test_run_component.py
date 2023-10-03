@@ -47,11 +47,22 @@ def test_run_component_no_meta_variable_raises(pytester):
 
 
 @pytest.mark.parametrize(
-    "memory_gb, memory_mb, memory_kb, memory_b, expected_bytes, expected_warning",
+    "memory_pb, memory_tb, memory_gb, memory_mb, memory_kb, memory_b, expected_bytes, expected_warning",
     [
-        (None, None, None, None, None, False),  # Not specified
-        (6, 6144, 6291456, None, 6442450944, False),  # Memory specified and the same
+        (None, None, None, None, None, None, None, False),  # Not specified
         (
+            6,
+            6144,
+            6291456,
+            6442450944,
+            6597069766656,
+            None,
+            6755399441055744,
+            False,
+        ),  # Memory specified and the same
+        (
+            None,
+            None,
             3,
             6144,
             6291456,
@@ -59,16 +70,18 @@ def test_run_component_no_meta_variable_raises(pytester):
             3221225472,
             True,
         ),  # Memory specified and different, pick the largest
-        (6, None, None, None, 6442450944, False),  # Only one specified
-        (6.5, None, None, None, 6979321856, False),
-        (3.5, 6144, 6291456, None, 3758096384, True),
-        (6, 6144.5, 6291456, None, 6442450944, True),
+        (None, None, 6, None, None, None, 6442450944, False),  # Only one specified
+        (None, None, 6.5, None, None, None, 6979321856, False),
+        (None, None, 3.5, 6144, 6291456, None, 3758096384, True),
+        (None, None, 6, 6144.5, 6291456, None, 6442450944, True),
     ],
 )
 def test_run_component_different_memory_specification_warnings(
     dummy_config,
     pytester,
     makepyfile_and_add_meta,
+    memory_pb,
+    memory_tb,
     memory_gb,
     memory_mb,
     memory_kb,
@@ -77,7 +90,7 @@ def test_run_component_different_memory_specification_warnings(
     expected_warning,
 ):
     expected_memory_args = ""
-    if any([memory_gb, memory_mb, memory_kb, memory_b]):
+    if any([memory_pb, memory_tb, memory_gb, memory_mb, memory_kb, memory_b]):
         expected_memory_args = f', "--memory", "{expected_bytes}B"'
     expected = (
         '["viash", "run", Path(meta["config"]), "--", "bar"%s]' % expected_memory_args
