@@ -13,7 +13,7 @@ def makepyfile_and_add_meta(pytester, write_config):
         viash_executable,
         cpu=None,
         memory_pb=None,
-        memory_tb=None,        
+        memory_tb=None,
         memory_gb=None,
         memory_mb=None,
         memory_kb=None,
