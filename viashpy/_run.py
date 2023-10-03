@@ -37,8 +37,8 @@ def _add_cpu_and_memory(args, cpus, memory, arg_prefix):
         assert any(
             [memory.endswith(suffix) for suffix in tobytesconverter.AVAILABLE_UNITS()]
         ), (
-            f"The memory specifier must have one of the following suffixes: "
-            "{','.join(tobytesconverter.AVAILABLE_UNITS())}"
+            "The memory specifier must have one of the following suffixes: "
+            f"{','.join(tobytesconverter.AVAILABLE_UNITS())}"
         )
         args += [f"{arg_prefix}memory", memory]
     return args
