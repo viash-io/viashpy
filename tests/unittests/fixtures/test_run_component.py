@@ -49,7 +49,26 @@ def test_run_component_no_meta_variable_raises(pytester):
 @pytest.mark.parametrize(
     "memory_pb, memory_tb, memory_gb, memory_mb, memory_kb, memory_b, expected_bytes, expected_warning",
     [
-        (None, None, None, None, None, None, None, False),  # Not specified
+        (
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            False,
+        ),  # Not specified (running test script directly but no memory constraints set)
+        (
+            "None",
+            "None",
+            "None",
+            "None",
+            "None",
+            "None",
+            "None",
+            False,
+        ),  # Using viash test without --memory
         (
             6,
             6144,
@@ -90,7 +109,18 @@ def test_run_component_different_memory_specification_warnings(
     expected_warning,
 ):
     expected_memory_args = ""
-    if any([memory_pb, memory_tb, memory_gb, memory_mb, memory_kb, memory_b]):
+    memory_specifiers = [
+        memory_pb,
+        memory_tb,
+        memory_gb,
+        memory_mb,
+        memory_kb,
+        memory_b,
+    ]
+    memory_specifiers = [
+        specifier for specifier in memory_specifiers if specifier != "None"
+    ]
+    if any(memory_specifiers):
         expected_memory_args = f', "--memory", "{expected_bytes}B"'
     expected = (
         '["viash", "run", Path(meta["config"]), "--", "bar"%s]' % expected_memory_args

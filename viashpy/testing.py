@@ -49,10 +49,11 @@ def memory_bytes(meta_attribute_getter):
     for suffix in tobytesconverter.AVAILABLE_UNITS():
         try:
             memory_value = meta_attribute_getter(f"memory_{suffix.lower()}")
-            assert isinstance(memory_value, int) or isinstance(
-                memory_value, float
-            ), "The values for the memory resources set in the `meta` dictionairy must be floats or integers."
-            all_memory_attributes[suffix] = memory_value
+            if memory_value is not None:
+                assert isinstance(memory_value, int) or isinstance(
+                    memory_value, float
+                ), "The values for the memory resources set in the `meta` dictionairy must be floats or integers."
+                all_memory_attributes[suffix] = memory_value
         except KeyError:
             pass
     if not all_memory_attributes:

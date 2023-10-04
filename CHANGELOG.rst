@@ -2,6 +2,14 @@
 Changelog
 *********
 
+0.4.1 (4/10/2023)
+=================
+
+Bug fixes
+---------
+* Fix an issue with `run_component` raising `AssertionError` when using `viash test` without `--memory`.
+
+
 0.4.0 (3/10/2023)
 =================
 
