@@ -45,6 +45,15 @@ def cpus(meta_attribute_getter):
 
 @pytest.fixture
 def memory_bytes(meta_attribute_getter):
+    """
+    Cover the different scenarios that can occur when memory requirements are set.
+
+    1. All memory fields set to 'None' (i.e. viash (ns) test without `--memory` or all fields manually set to None in test script): return None
+    2. All memory fields not defined (i.e. KeyError, only when not set in test script and not using viash (ns) test): return None
+    3. All memory fields set (either by running viash (ns) test or setting them manually): return the bytes
+    4. Multiple values set, but not all (manually in test script): return the value for the smallest unit, converted to bytes.
+    5. 1 value set: return the value (manually in test script), converted to bytes.
+    """
     all_memory_attributes = {}
     for suffix in tobytesconverter.AVAILABLE_UNITS():
         try:
@@ -63,17 +72,19 @@ def memory_bytes(meta_attribute_getter):
         for suffix, memory in all_memory_attributes.items()
     }
     if len(set(memory_bytes.values())) > 1:
-        warnings.warn(
-            "Different values were defined in the 'meta' dictionairy that "
-            "limit memory, choosing the one with the largest unit."
-        )
-        largest_unit_value = None
+        if len(tobytesconverter.AVAILABLE_UNITS()) != len(memory_bytes):
+            # if not all units are set, the user probably specified the memory themselves multiple times...
+            warnings.warn(
+                "Different values were defined in the 'meta' dictionairy that "
+                f"limit memory, choosing the one with the smallest unit. Found: {memory_bytes}, "
+                f"available units: {tobytesconverter.AVAILABLE_UNITS()}."
+            )
         for unit in tobytesconverter.AVAILABLE_UNITS():
             try:
-                largest_unit_value = memory_bytes[unit]
+                return f"{int(memory_bytes[unit])}B"
             except KeyError:
                 pass
-        return f"{int(largest_unit_value)}B"
+        raise RuntimeError("At least one available unit should have been found.")
     (_, unit_value), *_ = memory_bytes.items()
     return f"{int(unit_value)}B"
 

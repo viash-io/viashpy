@@ -86,13 +86,14 @@ def test_run_component_no_meta_variable_raises(pytester):
             6144,
             6291456,
             None,
-            3221225472,
+            6442450944,
             True,
         ),  # Memory specified and different, pick the largest
         (None, None, 6, None, None, None, 6442450944, False),  # Only one specified
         (None, None, 6.5, None, None, None, 6979321856, False),
-        (None, None, 3.5, 6144, 6291456, None, 3758096384, True),
+        (None, None, 3.5, 6144, 6291456, None, 6442450944, True),
         (None, None, 6, 6144.5, 6291456, None, 6442450944, True),
+        (None, None, 6, 6144.5, 6291456.5, None, 6442451456, True),
     ],
 )
 def test_run_component_different_memory_specification_warnings(
@@ -156,7 +157,7 @@ def test_run_component_different_memory_specification_warnings(
     if expected_warning:
         result.stdout.fnmatch_lines(
             [
-                "*Different values were defined in the 'meta' dictionairy that limit memory, choosing the one with the largest unit.*"
+                "*Different values were defined in the 'meta' dictionairy that limit memory, choosing the one with the smallest unit.*"
             ]
         )
     assert result.ret == 0

@@ -2,6 +2,18 @@
 Changelog
 *********
 
+0.5.0 (5/10/2023)
+================
+
+Breaking Changes
+----------------
+
+* Fixed an issue with `run_component` assigning too much memory when using `viash test` with `--memory`. 
+  Viash rounds the values for the units that are bigger than the unit specified with `--memory` up to the nearest integer. 
+  (i.e. with `--memory 500GB`, `memory_tb` becomes `1`). Because `run_component` took the value for the largest unit, 
+  memory was being over-provisioned. The breaking change involves `run_component` using the value from the
+  smallest (instead of largest) unit when the memory resources are specified with multiple units.
+
 0.4.1 (4/10/2023)
 =================
 

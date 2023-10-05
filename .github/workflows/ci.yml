@@ -48,4 +48,4 @@ jobs:
         bin/viash -h
     - name: Viash ns test
       run: |
-        ./bin/viash ns test -s tests/integration/ -p docker
+        ./bin/viash ns test -s tests/integration/ -p docker --memory 1GB
