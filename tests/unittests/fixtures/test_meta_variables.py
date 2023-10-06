@@ -103,7 +103,7 @@ def test_meta_config_path_not_defined_raises(pytester):
     result = pytester.runpytest("-v")
     result.stdout.fnmatch_lines(
         [
-            "*KeyError: \"The 'config' value was not set in the 'meta' dictionairy of the test module *",
+            "*KeyError: \"The 'config' value was not set in the 'meta' dictionary of the test module *",
         ]
     )
     assert result.ret != 0

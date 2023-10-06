@@ -32,7 +32,7 @@ if __name__ == "__main__":
     stdout_str = temp_stdout.getvalue()
     print(stdout_str)
     assert (
-        "Different values were defined in the 'meta' dictionairy that limit memory, choosing the one with the smallest unit"
+        "Different values were defined in the 'meta' dictionary that limit memory, choosing the one with the smallest unit"
         not in stdout_str
     )
     sys.exit(result)

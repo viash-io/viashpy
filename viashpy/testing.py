@@ -61,7 +61,7 @@ def memory_bytes(meta_attribute_getter):
             if memory_value is not None:
                 assert isinstance(memory_value, int) or isinstance(
                     memory_value, float
-                ), "The values for the memory resources set in the `meta` dictionairy must be floats or integers."
+                ), "The values for the memory resources set in the `meta` dictionary must be floats or integers."
                 all_memory_attributes[suffix] = memory_value
         except KeyError:
             pass
@@ -75,7 +75,7 @@ def memory_bytes(meta_attribute_getter):
         if len(tobytesconverter.AVAILABLE_UNITS()) != len(memory_bytes):
             # if not all units are set, the user probably specified the memory themselves multiple times...
             warnings.warn(
-                "Different values were defined in the 'meta' dictionairy that "
+                "Different values were defined in the 'meta' dictionary that "
                 f"limit memory, choosing the one with the smallest unit. Found: {memory_bytes}, "
                 f"available units: {tobytesconverter.AVAILABLE_UNITS()}."
             )
@@ -109,7 +109,7 @@ def meta_config_path(meta_attribute_getter, test_module):
         config_path = meta_attribute_getter("config")
     except KeyError:
         raise KeyError(
-            f"The 'config' value was not set in the 'meta' dictionairy of the test module {test_module}."
+            f"The 'config' value was not set in the 'meta' dictionary of the test module {test_module}."
             "Please define it between the '### VIASH_START ... ### VIASH_END' block."
             "In case this error is reported while using 'viash test' or 'viash_test', "
             "use a viash version >= 0.6.4."
