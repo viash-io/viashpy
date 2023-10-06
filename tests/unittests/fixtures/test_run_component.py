@@ -157,7 +157,7 @@ def test_run_component_different_memory_specification_warnings(
     if expected_warning:
         result.stdout.fnmatch_lines(
             [
-                "*Different values were defined in the 'meta' dictionairy that limit memory, choosing the one with the smallest unit.*"
+                "*Different values were defined in the 'meta' dictionary that limit memory, choosing the one with the smallest unit.*"
             ]
         )
     assert result.ret == 0
