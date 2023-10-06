@@ -2,7 +2,7 @@
 Changelog
 *********
 
-0.5.0 (5/10/2023)
+0.5.0 (6/10/2023)
 ================
 
 Breaking Changes
@@ -29,7 +29,7 @@ New functionality
 -----------------
 
 * `run_component` now passes the `cpus`, `memory_b`, `memory_kb`, `memory_mb` `memory_gb`, `memory_tb`, `memory_pb`, 
-  `memory_tb`, `memory_pb` keys, defined in the `meta` dictionairy of the test module, 
+  `memory_tb`, `memory_pb` keys, defined in the `meta` dictionary of the test module, 
   as memory and cpu contraints to the executed component. The `cpus` and all memory keys
   can be set by using `viash (ns) test` with `--cpus` or `--memory` respectively.
   The memory and cpu fields can also be set to a hardcoded value in the test script. In this case,
