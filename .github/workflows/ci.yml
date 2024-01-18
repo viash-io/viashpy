@@ -41,11 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Fetch viash
-      run: |
-        bin/init -n
-        tree .
-        bin/viash -h
+    - uses: viash-io/viash-actions/setup@v4
     - name: Viash ns test
       run: |
-        ./bin/viash ns test -s tests/integration/ -p docker --memory 1GB
+        viash ns test -s tests/integration/ -p docker --memory 1GB
