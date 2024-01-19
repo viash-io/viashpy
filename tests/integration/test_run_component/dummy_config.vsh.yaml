@@ -23,7 +23,9 @@ functionality:
   test_resources:
     - type: python_script
       path: test_script.py
+    - path: /tests/integration/test_run_component/dummy_config.vsh.yaml
 platforms:
+  - type: native
   - type: docker
     image: python:3.10
     test_setup:
@@ -32,5 +34,11 @@ platforms:
       - type: python
         packages:
           - /viashpy
-  - type: native
+          - ruamel.yaml
+      - type: apt
+        packages:
+          - default-jdk
+      - type: docker
+        run: |
+          curl -fsSL dl.viash.io | bash; mv viash /usr/local/bin/
   - type: nextflow

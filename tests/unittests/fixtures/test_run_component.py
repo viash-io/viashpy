@@ -109,7 +109,7 @@ def test_run_component_different_memory_specification_warnings(
     expected_bytes,
     expected_warning,
 ):
-    expected_memory_args = ""
+    expected_memory_args = ", "
     memory_specifiers = [
         memory_pb,
         memory_tb,
@@ -122,9 +122,9 @@ def test_run_component_different_memory_specification_warnings(
         specifier for specifier in memory_specifiers if specifier != "None"
     ]
     if any(memory_specifiers):
-        expected_memory_args = f', "--memory", "{expected_bytes}B"'
+        expected_memory_args = f', "--memory", "{expected_bytes}B", '
     expected = (
-        '["viash", "run", Path(meta["config"]), "--", "bar"%s]' % expected_memory_args
+        '["viash", "run", Path(meta["config"])%s"--", "bar"]' % expected_memory_args
     )
     makepyfile_and_add_meta(
         f"""
@@ -170,7 +170,7 @@ def test_run_component_different_memory_specification_warnings(
     [
         (
             "dummy_config",
-            '["viash", "run", Path(meta["config"]), "--", "bar"%s%s]',
+            '["viash", "run", Path(meta["config"])%s%s, "--", "bar"]',
             "--",
         ),
         ("dummy_config_with_info", '[Path("foo"), "bar"%s%s]', "---"),

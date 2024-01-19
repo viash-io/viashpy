@@ -7,7 +7,8 @@ from functools import wraps
 from subprocess import CalledProcessError
 import warnings
 
-logger = logging.Logger(__name__)
+logger = logging.getLogger(__name__)
+logger.propagate = True
 
 
 @pytest.fixture
@@ -196,7 +197,7 @@ def run_component(
         return wrapper
 
     logger.info(
-        "Could not find the original viash config source. "
+        f"Could not find the original viash config source at '{viash_source_config_path}'. "
         "Assuming test script is run from 'viash test' or 'viash_test'."
     )
 
