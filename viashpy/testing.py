@@ -8,7 +8,6 @@ from subprocess import CalledProcessError
 import warnings
 
 logger = logging.getLogger(__name__)
-logger.propagate = True
 
 
 @pytest.fixture
