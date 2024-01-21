@@ -196,7 +196,7 @@ def run_component(
         return wrapper
 
     logger.info(
-        f"Could not find the original viash config source at '{viash_source_config_path}'. "
+        "Could not find the original viash config source. "
         "Assuming test script is run from 'viash test' or 'viash_test'."
     )
 
