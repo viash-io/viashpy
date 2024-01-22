@@ -1,13 +1,5 @@
 import stat
 import pytest
-from operator import ge, eq
-
-
-def warnings_enabled_for_pytest_version():
-    """
-    assert_outcomes() only has the warnings parameter with pytest>7.0
-    """
-    return True if int(pytest.__version__.split(".")[0]) >= 7 else False
 
 
 def test_run_component_fixture(pytester, makepyfile_and_add_meta, dummy_config):
@@ -95,7 +87,7 @@ def test_run_component_no_meta_variable_raises(pytester):
             6291456,
             None,
             6442450944,
-            warnings_enabled_for_pytest_version(),
+            True,
         ),  # Memory specified and different, pick the largest
         (None, None, 6, None, None, None, 6442450944, False),  # Only one specified
         (None, None, 6.5, None, None, None, 6979321856, False),
@@ -107,7 +99,7 @@ def test_run_component_no_meta_variable_raises(pytester):
             6291456,
             None,
             6442450944,
-            warnings_enabled_for_pytest_version(),
+            True,
         ),
         (
             None,
@@ -117,7 +109,7 @@ def test_run_component_no_meta_variable_raises(pytester):
             6291456,
             None,
             6442450944,
-            warnings_enabled_for_pytest_version(),
+            True,
         ),
         (
             None,
@@ -127,7 +119,7 @@ def test_run_component_no_meta_variable_raises(pytester):
             6291456.5,
             None,
             6442451456,
-            warnings_enabled_for_pytest_version(),
+            True,
         ),
     ],
 )
@@ -185,17 +177,7 @@ def test_run_component_different_memory_specification_warnings(
         memory_b=memory_b,
     )
     result = pytester.runpytest()
-    expected_outcome_dict = {"passed": (1, eq)}
-    if expected_warning:
-        expected_outcome_dict["warnings"] = (1, ge)
-
-    for result_type, result_amount in result.parseoutcomes().items():
-        if result_amount:
-            assert (
-                result_type in expected_outcome_dict
-            ), f"Outcome not the same: {{'{result_type}': {result_amount}}} not in expected dict."
-            expected_value, comparator = expected_outcome_dict[result_type]
-            assert comparator(result_amount, expected_value)
+    result.assert_outcomes(passed=1)
     if expected_warning:
         result.stdout.fnmatch_lines(
             [
