@@ -80,7 +80,8 @@ def viash_run(
     if not config.is_file():
         raise FileNotFoundError(f"{config} does not exist or is not a file.")
     return check_output(
-        [viash_location, "run", config, "--"] + args
+        [viash_location, "run", config, "--"]
+        + args
         + _format_cpu_and_memory(cpus, memory),
         stderr=stderr,
         **popen_kwargs,
