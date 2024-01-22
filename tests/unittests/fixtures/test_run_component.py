@@ -149,9 +149,9 @@ def test_run_component_different_memory_specification_warnings(
         specifier for specifier in memory_specifiers if specifier != "None"
     ]
     if any(memory_specifiers):
-        expected_memory_args = f', "--memory", "{expected_bytes}B", '
+        expected_memory_args = f', "---memory", "{expected_bytes}B", '
     expected = (
-        '["viash", "run", Path(meta["config"])%s"--", "bar"]' % expected_memory_args
+        '["viash", "run", Path(meta["config"]), "--", "bar"%s]' % expected_memory_args
     )
     makepyfile_and_add_meta(
         f"""
@@ -190,14 +190,13 @@ def test_run_component_different_memory_specification_warnings(
 @pytest.mark.parametrize("memory, expected_bytes", [(None, None), (6, 6442450944)])
 @pytest.mark.parametrize("cpu", [None, 2])
 @pytest.mark.parametrize(
-    "config_fixture, expected, arg_prefix",
+    "config_fixture, expected",
     [
         (
             "dummy_config",
-            '["viash", "run", Path(meta["config"])%s%s, "--", "bar"]',
-            "--",
+            '["viash", "run", Path(meta["config"]), "--", "bar"%s%s]',
         ),
-        ("dummy_config_with_info", '[Path("foo"), "bar"%s%s]', "---"),
+        ("dummy_config_with_info", '[Path("foo"), "bar"%s%s]'),
     ],
 )
 def test_run_component_executes_subprocess(
@@ -209,11 +208,10 @@ def test_run_component_executes_subprocess(
     cpu,
     config_fixture,
     expected,
-    arg_prefix,
 ):
     format_string = (
-        f', "{arg_prefix}cpus", "{cpu}"' if cpu else "",
-        f', "{arg_prefix}memory", "{expected_bytes}B"' if memory else "",
+        f', "---cpus", "{cpu}"' if cpu else "",
+        f', "---memory", "{expected_bytes}B"' if memory else "",
     )
     expected = expected % format_string
     makepyfile_and_add_meta(

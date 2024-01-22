@@ -28,11 +28,12 @@ class ToBytesConverter:
 tobytesconverter = ToBytesConverter()
 
 
-def _add_cpu_and_memory(args, cpus, memory, arg_prefix):
+def _format_cpu_and_memory(cpus, memory, arg_prefix="---"):
+    result = []
     if cpus:
         # Must be a string because subprocess.check_output
         # only works with strings.
-        args += [f"{arg_prefix}cpus", str(cpus)]
+        result += [f"{arg_prefix}cpus", str(cpus)]
     if memory:
         assert any(
             [memory.endswith(suffix) for suffix in tobytesconverter.AVAILABLE_UNITS()]
@@ -40,8 +41,8 @@ def _add_cpu_and_memory(args, cpus, memory, arg_prefix):
             "The memory specifier must have one of the following suffixes: "
             f"{','.join(tobytesconverter.AVAILABLE_UNITS())}"
         )
-        args += [f"{arg_prefix}memory", memory]
-    return args
+        result += [f"{arg_prefix}memory", memory]
+    return result
 
 
 def run_build_component(
@@ -59,7 +60,7 @@ def run_build_component(
             f"{executable_location} does not exist or is not a file."
         )
     return check_output(
-        [executable_location] + _add_cpu_and_memory(args, cpus, memory, "---"),
+        [executable_location] + args + _format_cpu_and_memory(cpus, memory),
         stderr=stderr,
         **popen_kwargs,
     )
@@ -79,9 +80,8 @@ def viash_run(
     if not config.is_file():
         raise FileNotFoundError(f"{config} does not exist or is not a file.")
     return check_output(
-        _add_cpu_and_memory([viash_location, "run", config], cpus, memory, "--")
-        + ["--"]
-        + args,
+        [viash_location, "run", config, "--"] + args
+        + _format_cpu_and_memory(cpus, memory),
         stderr=stderr,
         **popen_kwargs,
     )
