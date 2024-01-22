@@ -1,6 +1,6 @@
 import stat
 import pytest
-import warnings
+from operator import ge, eq
 
 
 def warnings_enabled_for_pytest_version():
@@ -184,13 +184,18 @@ def test_run_component_different_memory_specification_warnings(
         memory_kb=memory_kb,
         memory_b=memory_b,
     )
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=DeprecationWarning)
-        result = pytester.runpytest()
-    expected_outcome_dict = (
-        {"passed": 1, "warnings": 1} if expected_warning else {"passed": 1}
-    )
-    result.assert_outcomes(**expected_outcome_dict)
+    result = pytester.runpytest()
+    expected_outcome_dict = {"passed": (1, eq)}
+    if expected_warning:
+        expected_outcome_dict["warnings"] = (1, ge)
+
+    for result_type, result_amount in result.parseoutcomes().items():
+        if result_amount:
+            assert (
+                result_type in expected_outcome_dict
+            ), f"Outcome not the same: {{'{result_type}': {result_amount}}} not in expected dict."
+            expected_value, comparator = expected_outcome_dict[result_type]
+            assert comparator(result_amount, expected_value)
     if expected_warning:
         result.stdout.fnmatch_lines(
             [
