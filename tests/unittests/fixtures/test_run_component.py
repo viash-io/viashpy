@@ -1,5 +1,7 @@
 import stat
 import pytest
+import sys
+import warnings
 
 
 def warnings_enabled_for_pytest_version():
@@ -183,7 +185,8 @@ def test_run_component_different_memory_specification_warnings(
         memory_kb=memory_kb,
         memory_b=memory_b,
     )
-    result = pytester.runpytest()
+    with warnings.catch_warnings():
+        result = pytester.runpytest()
     expected_outcome_dict = (
         {"passed": 1, "warnings": 1} if expected_warning else {"passed": 1}
     )
