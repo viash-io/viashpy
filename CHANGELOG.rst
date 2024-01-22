@@ -12,6 +12,7 @@ Breaking Changes
 Minor Changes
 -------------
 * Added support for python 3.12 (PR #20).
+* (development) Removed the bin/ folder in favour of a viash project config (`_viash.yaml`) (PR #20).
 
 Bug fixes
 ---------
