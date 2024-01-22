@@ -1,6 +1,5 @@
 import stat
 import pytest
-import sys
 import warnings
 
 
@@ -186,6 +185,7 @@ def test_run_component_different_memory_specification_warnings(
         memory_b=memory_b,
     )
     with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
         result = pytester.runpytest()
     expected_outcome_dict = (
         {"passed": 1, "warnings": 1} if expected_warning else {"passed": 1}
