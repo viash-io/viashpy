@@ -172,7 +172,6 @@ def run_component(
                 return function_to_run(*args, **kwargs)
             except CalledProcessError as e:
                 with caplog.at_level(logging.DEBUG):
-                    logger = logging.getLogger()
                     logger.info(
                         f"Captured component output was:\n{e.stdout.decode('utf-8')}"
                     )
@@ -195,7 +194,7 @@ def run_component(
 
         return wrapper
 
-    logger.info(
+    logger.debug(
         "Could not find the original viash config source. "
         "Assuming test script is run from 'viash test' or 'viash_test'."
     )

@@ -2,6 +2,13 @@ import stat
 import pytest
 
 
+def warnings_enabled_for_pytest_version():
+    """
+    assert_outcomes() only has the warnings parameter with pytest>7.0
+    """
+    return True if int(pytest.__version__.split(".")[0]) >= 7 else False
+
+
 def test_run_component_fixture(pytester, makepyfile_and_add_meta, dummy_config):
     """Make sure that pytest accepts our fixture."""
 
@@ -87,13 +94,40 @@ def test_run_component_no_meta_variable_raises(pytester):
             6291456,
             None,
             6442450944,
-            True,
+            warnings_enabled_for_pytest_version(),
         ),  # Memory specified and different, pick the largest
         (None, None, 6, None, None, None, 6442450944, False),  # Only one specified
         (None, None, 6.5, None, None, None, 6979321856, False),
-        (None, None, 3.5, 6144, 6291456, None, 6442450944, True),
-        (None, None, 6, 6144.5, 6291456, None, 6442450944, True),
-        (None, None, 6, 6144.5, 6291456.5, None, 6442451456, True),
+        (
+            None,
+            None,
+            3.5,
+            6144,
+            6291456,
+            None,
+            6442450944,
+            warnings_enabled_for_pytest_version(),
+        ),
+        (
+            None,
+            None,
+            6,
+            6144.5,
+            6291456,
+            None,
+            6442450944,
+            warnings_enabled_for_pytest_version(),
+        ),
+        (
+            None,
+            None,
+            6,
+            6144.5,
+            6291456.5,
+            None,
+            6442451456,
+            warnings_enabled_for_pytest_version(),
+        ),
     ],
 )
 def test_run_component_different_memory_specification_warnings(
@@ -273,6 +307,45 @@ def test_run_component_fails_logging(
     # Check if stack traces are hidden
     result.stdout.no_fnmatch_line("*def wrapper*")
     result.stdout.no_fnmatch_line("*def run_component*")
+
+
+def test_viashpy_run_component_logging(pytester, makepyfile_and_add_meta, dummy_config):
+    executable = pytester.makefile(
+        "",
+        foo="#!/bin/sh\npython -c 'print(\"This script has been run.\")'",
+    )
+    executable.chmod(executable.stat().st_mode | stat.S_IEXEC)
+
+    makepyfile_and_add_meta(
+        """
+        import subprocess
+        import logging
+        import pytest
+        from pathlib import Path, PosixPath
+
+        @pytest.fixture
+        def viash_source_config_path():
+            class MockedConfigPath:
+                @staticmethod
+                def is_file():
+                    return False
+            return MockedConfigPath
+
+        def test_loading_run_component(mocker, run_component, caplog):
+            mocked_check_output = mocker.patch('viashpy.testing.viash_run',
+                                               return_value=b"Some dummy output")
+            stdout = run_component(["bar"])
+        """,
+        dummy_config,
+        executable,
+    )
+    result = pytester.runpytest("--log-cli-level=DEBUG")
+    result.assert_outcomes(passed=1)
+    expected_str = (
+        "*Could not find the original viash config source. "
+        "Assuming test script is run from 'viash test' or 'viash_test'.*"
+    )
+    result.stdout.fnmatch_lines([expected_str])
 
 
 @pytest.mark.parametrize(

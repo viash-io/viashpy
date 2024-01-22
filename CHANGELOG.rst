@@ -2,6 +2,24 @@
 Changelog
 *********
 
+0.6.0 (TBD)
+===========
+
+Breaking Changes
+----------------
+* The minimum supported version of pytest is now `5.4` (PR #20).
+
+Minor Changes
+-------------
+* Added support for python 3.12 (PR #20).
+
+Bug fixes
+---------
+* Fix `run_component` setting `--memory` and `--cpu` at the incorrect location in the `viash run` command (PR #20).
+* Fix tests for pytest versions older than `7.0` (PR #20).
+* Match the logging level to the level in the config from pytest (see pytests' `--log-cli-level`) (PR #20)
+
+
 0.5.0 (6/10/2023)
 ================
 
