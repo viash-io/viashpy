@@ -91,9 +91,36 @@ def test_run_component_no_meta_variable_raises(pytester):
         ),  # Memory specified and different, pick the largest
         (None, None, 6, None, None, None, 6442450944, False),  # Only one specified
         (None, None, 6.5, None, None, None, 6979321856, False),
-        (None, None, 3.5, 6144, 6291456, None, 6442450944, True),
-        (None, None, 6, 6144.5, 6291456, None, 6442450944, True),
-        (None, None, 6, 6144.5, 6291456.5, None, 6442451456, True),
+        (
+            None,
+            None,
+            3.5,
+            6144,
+            6291456,
+            None,
+            6442450944,
+            True,
+        ),
+        (
+            None,
+            None,
+            6,
+            6144.5,
+            6291456,
+            None,
+            6442450944,
+            True,
+        ),
+        (
+            None,
+            None,
+            6,
+            6144.5,
+            6291456.5,
+            None,
+            6442451456,
+            True,
+        ),
     ],
 )
 def test_run_component_different_memory_specification_warnings(
@@ -109,7 +136,7 @@ def test_run_component_different_memory_specification_warnings(
     expected_bytes,
     expected_warning,
 ):
-    expected_memory_args = ""
+    expected_memory_args = ", "
     memory_specifiers = [
         memory_pb,
         memory_tb,
@@ -122,7 +149,7 @@ def test_run_component_different_memory_specification_warnings(
         specifier for specifier in memory_specifiers if specifier != "None"
     ]
     if any(memory_specifiers):
-        expected_memory_args = f', "--memory", "{expected_bytes}B"'
+        expected_memory_args = f', "---memory", "{expected_bytes}B", '
     expected = (
         '["viash", "run", Path(meta["config"]), "--", "bar"%s]' % expected_memory_args
     )
@@ -150,10 +177,7 @@ def test_run_component_different_memory_specification_warnings(
         memory_b=memory_b,
     )
     result = pytester.runpytest()
-    expected_outcome_dict = (
-        {"passed": 1, "warnings": 1} if expected_warning else {"passed": 1}
-    )
-    result.assert_outcomes(**expected_outcome_dict)
+    result.assert_outcomes(passed=1)
     if expected_warning:
         result.stdout.fnmatch_lines(
             [
@@ -166,14 +190,13 @@ def test_run_component_different_memory_specification_warnings(
 @pytest.mark.parametrize("memory, expected_bytes", [(None, None), (6, 6442450944)])
 @pytest.mark.parametrize("cpu", [None, 2])
 @pytest.mark.parametrize(
-    "config_fixture, expected, arg_prefix",
+    "config_fixture, expected",
     [
         (
             "dummy_config",
             '["viash", "run", Path(meta["config"]), "--", "bar"%s%s]',
-            "--",
         ),
-        ("dummy_config_with_info", '[Path("foo"), "bar"%s%s]', "---"),
+        ("dummy_config_with_info", '[Path("foo"), "bar"%s%s]'),
     ],
 )
 def test_run_component_executes_subprocess(
@@ -185,11 +208,10 @@ def test_run_component_executes_subprocess(
     cpu,
     config_fixture,
     expected,
-    arg_prefix,
 ):
     format_string = (
-        f', "{arg_prefix}cpus", "{cpu}"' if cpu else "",
-        f', "{arg_prefix}memory", "{expected_bytes}B"' if memory else "",
+        f', "---cpus", "{cpu}"' if cpu else "",
+        f', "---memory", "{expected_bytes}B"' if memory else "",
     )
     expected = expected % format_string
     makepyfile_and_add_meta(
@@ -273,6 +295,45 @@ def test_run_component_fails_logging(
     # Check if stack traces are hidden
     result.stdout.no_fnmatch_line("*def wrapper*")
     result.stdout.no_fnmatch_line("*def run_component*")
+
+
+def test_viashpy_run_component_logging(pytester, makepyfile_and_add_meta, dummy_config):
+    executable = pytester.makefile(
+        "",
+        foo="#!/bin/sh\npython -c 'print(\"This script has been run.\")'",
+    )
+    executable.chmod(executable.stat().st_mode | stat.S_IEXEC)
+
+    makepyfile_and_add_meta(
+        """
+        import subprocess
+        import logging
+        import pytest
+        from pathlib import Path, PosixPath
+
+        @pytest.fixture
+        def viash_source_config_path():
+            class MockedConfigPath:
+                @staticmethod
+                def is_file():
+                    return False
+            return MockedConfigPath
+
+        def test_loading_run_component(mocker, run_component, caplog):
+            mocked_check_output = mocker.patch('viashpy.testing.viash_run',
+                                               return_value=b"Some dummy output")
+            stdout = run_component(["bar"])
+        """,
+        dummy_config,
+        executable,
+    )
+    result = pytester.runpytest("--log-cli-level=DEBUG")
+    result.assert_outcomes(passed=1)
+    expected_str = (
+        "*Could not find the original viash config source. "
+        "Assuming test script is run from 'viash test' or 'viash_test'.*"
+    )
+    result.stdout.fnmatch_lines([expected_str])
 
 
 @pytest.mark.parametrize(
