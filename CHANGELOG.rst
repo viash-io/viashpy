@@ -7,7 +7,7 @@ Changelog
 
 Breaking Changes
 ----------------
-* The minimum supported version of pytest is now `5.4` (PR #20).
+* The minimum supported version of pytest is now `6.2` (PR #20).
 
 Minor Changes
 -------------
