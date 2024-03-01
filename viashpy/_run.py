@@ -2,6 +2,10 @@ from __future__ import annotations
 from subprocess import check_output, STDOUT, DEVNULL, PIPE
 from pathlib import Path
 from typing import Any
+from .types import Platform
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ToBytesConverter:
@@ -59,11 +63,9 @@ def run_build_component(
         raise FileNotFoundError(
             f"{executable_location} does not exist or is not a file."
         )
-    return check_output(
-        [executable_location] + args + _format_cpu_and_memory(cpus, memory),
-        stderr=stderr,
-        **popen_kwargs,
-    )
+    full_command = [executable_location] + args + _format_cpu_and_memory(cpus, memory)
+    logger.debug("Running '%s'", " ".join(map(str, full_command)))
+    return check_output(full_command, stderr=stderr, **popen_kwargs)
 
 
 def viash_run(
@@ -72,6 +74,7 @@ def viash_run(
     *,
     cpus: int | None = None,
     memory: str | None = None,
+    platform: Platform = "docker",
     viash_location: str | Path = "viash",
     stderr: STDOUT | PIPE | DEVNULL | -1 | -2 | -3 = STDOUT,
     **popen_kwargs,
@@ -79,10 +82,34 @@ def viash_run(
     config = Path(config)
     if not config.is_file():
         raise FileNotFoundError(f"{config} does not exist or is not a file.")
-    return check_output(
-        [viash_location, "run", config, "--"]
+    args = ["--"] + args
+    if platform == "docker":
+        build_args = [
+            viash_location,
+            "run",
+            config,
+            "-p",
+            "docker",
+            "-c",
+            ".platforms[.type == 'docker'].target_tag := 'test'",
+            "--",
+            "---setup",
+            "cachedbuild",
+        ]
+        logger.debug("Building docker image: %s", " ".join(map(str, build_args)))
+        check_output(build_args, stderr=stderr, **popen_kwargs)  # CalledProcessError should be handled by caller
+    full_command = (
+        [
+            viash_location,
+            "run",
+            config,
+            "-p",
+            platform,
+            "-c",
+            ".platforms[.type == 'docker'].target_tag := 'test'",
+        ]
+        + _format_cpu_and_memory(cpus, memory, "--")
         + args
-        + _format_cpu_and_memory(cpus, memory),
-        stderr=stderr,
-        **popen_kwargs,
     )
+    logger.debug("Running '%s'", " ".join(map(str, full_command)))
+    return check_output(full_command, stderr=stderr, **popen_kwargs)

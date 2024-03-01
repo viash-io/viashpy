@@ -54,7 +54,7 @@ class TestRunUsingConfig:
         return result_path
 
     def test_run_component_check_correct_memory_syntax(self, run_component):
-        captured_output = run_component(["--output", "bar.txt"])
+        captured_output = run_component(["--output", "bar.txt"], platform="native")
         with open("bar.txt", "r") as open_output_file:
             contents = open_output_file.read()
             assert contents == "foo!"

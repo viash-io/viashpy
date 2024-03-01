@@ -20,8 +20,7 @@ def extract_tar(pathname: Path | str, output_dir: Path | str):
     if not pathname.is_file():
         raise FileNotFoundError(f"{pathname} does not exist or is not a file.")
 
-    # TODO: is_tarfile supports a path from python >= 3.9
-    if not tarfile.is_tarfile(str(pathname)):
+    if not tarfile.is_tarfile(pathname):
         raise ValueError(f"{pathname} is not a tarfile.")
 
     if not output_dir.is_dir():
