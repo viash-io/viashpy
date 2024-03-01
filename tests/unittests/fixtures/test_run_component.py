@@ -181,7 +181,7 @@ def test_run_component_different_memory_specification_warnings(
         memory_kb=memory_kb,
         memory_b=memory_b,
     )
-    result = pytester.runpytest("--log-cli-level=DEBUG")
+    result = pytester.runpytest()
     result.assert_outcomes(passed=1)
     if expected_warning:
         result.stdout.fnmatch_lines(
