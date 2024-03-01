@@ -97,7 +97,9 @@ def viash_run(
             "cachedbuild",
         ]
         logger.debug("Building docker image: %s", " ".join(map(str, build_args)))
-        check_output(build_args, stderr=stderr, **popen_kwargs)  # CalledProcessError should be handled by caller
+        check_output(
+            build_args, stderr=stderr, **popen_kwargs
+        )  # CalledProcessError should be handled by caller
     full_command = (
         [
             viash_location,

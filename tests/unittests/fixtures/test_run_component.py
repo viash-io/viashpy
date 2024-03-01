@@ -154,8 +154,14 @@ def test_run_component_different_memory_specification_warnings(
         '["viash", "run", Path(meta["config"]), "-p", "docker", "-c",'
         "\".platforms[.type == 'docker'].target_tag := 'test'\""
     )
-    expected_build_call = f'{expected_base_command}, "--", "---setup", "cachedbuild"]'
-    expected_run_call = f'{expected_base_command}{expected_memory_args}"--", "bar"]'
+    expected_build_call = (
+        f"mocker.call({expected_base_command}, "
+        '"--", "---setup", "cachedbuild"], stderr=subprocess.STDOUT)'
+    )
+    expected_run_call = (
+        f'mocker.call({expected_base_command}{expected_memory_args}"--", "bar"], '
+        "stderr=subprocess.STDOUT)"
+    )
 
     makepyfile_and_add_meta(
         f"""
@@ -167,9 +173,8 @@ def test_run_component_different_memory_specification_warnings(
                                                return_value=b"Some dummy output")
             mocked_path = mocker.patch('viashpy.testing.Path.is_file', return_value=True)
             stdout = run_component(["bar"])
-            mocked_check_output.has_calls([mocker.call({expected_build_call}),
-                                           mocker.call({expected_run_call})],
-                                           stderr=subprocess.STDOUT)
+            mocked_check_output.assert_has_calls([{expected_build_call},
+                                                  {expected_run_call}])
             assert stdout == b"Some dummy output"
         """,
         dummy_config,
