@@ -1,6 +1,7 @@
 import pytest
 import logging
 from ._run import run_build_component, viash_run, tobytesconverter
+from .types import Platform
 from .config import read_viash_config
 from pathlib import Path
 from functools import wraps
@@ -183,13 +184,14 @@ def run_component(
     if viash_source_config_path.is_file():
 
         @run_and_handle_errors
-        def wrapper(args_as_list):
+        def wrapper(args_as_list, platform: Platform = "docker"):
             return viash_run(
                 viash_source_config_path,
                 args_as_list,
                 viash_location=viash_executable,
                 cpus=cpus,
                 memory=memory_bytes,
+                platform=platform,
             )
 
         return wrapper

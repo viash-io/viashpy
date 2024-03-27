@@ -149,10 +149,20 @@ def test_run_component_different_memory_specification_warnings(
         specifier for specifier in memory_specifiers if specifier != "None"
     ]
     if any(memory_specifiers):
-        expected_memory_args = f', "---memory", "{expected_bytes}B", '
-    expected = (
-        '["viash", "run", Path(meta["config"]), "--", "bar"%s]' % expected_memory_args
+        expected_memory_args = f', "--memory", "{expected_bytes}B", '
+    expected_base_command = (
+        '["viash", "run", Path(meta["config"]), "-p", "docker", "-c",'
+        "\".platforms[.type == 'docker'].target_tag := 'test'\""
     )
+    expected_build_call = (
+        f"mocker.call({expected_base_command}, "
+        '"--", "---setup", "cachedbuild"], stderr=subprocess.STDOUT)'
+    )
+    expected_run_call = (
+        f'mocker.call({expected_base_command}{expected_memory_args}"--", "bar"], '
+        "stderr=subprocess.STDOUT)"
+    )
+
     makepyfile_and_add_meta(
         f"""
         import subprocess
@@ -163,8 +173,8 @@ def test_run_component_different_memory_specification_warnings(
                                                return_value=b"Some dummy output")
             mocked_path = mocker.patch('viashpy.testing.Path.is_file', return_value=True)
             stdout = run_component(["bar"])
-            mocked_check_output.assert_called_once_with({expected},
-                                                        stderr=subprocess.STDOUT)
+            mocked_check_output.assert_has_calls([{expected_build_call},
+                                                  {expected_run_call}])
             assert stdout == b"Some dummy output"
         """,
         dummy_config,
@@ -190,13 +200,17 @@ def test_run_component_different_memory_specification_warnings(
 @pytest.mark.parametrize("memory, expected_bytes", [(None, None), (6, 6442450944)])
 @pytest.mark.parametrize("cpu", [None, 2])
 @pytest.mark.parametrize(
-    "config_fixture, expected",
+    "config_fixture, expected_build_cmd, expected_run_cmd, expected_prefix",
     [
         (
             "dummy_config",
-            '["viash", "run", Path(meta["config"]), "--", "bar"%s%s]',
+            '["viash", "run", Path(meta["config"]), "-p", "docker", "-c", '
+            '".platforms[.type == \'docker\'].target_tag := \'test\'", "--", "---setup", "cachedbuild"]',
+            '["viash", "run", Path(meta["config"]), "-p", "docker", '
+            '"-c", ".platforms[.type == \'docker\'].target_tag := \'test\'"%s%s, "--", "bar"]',
+            "--",
         ),
-        ("dummy_config_with_info", '[Path("foo"), "bar"%s%s]'),
+        ("dummy_config_with_info", "", '[Path("foo"), "bar"%s%s]', "---"),
     ],
 )
 def test_run_component_executes_subprocess(
@@ -207,13 +221,23 @@ def test_run_component_executes_subprocess(
     expected_bytes,
     cpu,
     config_fixture,
-    expected,
+    expected_build_cmd,
+    expected_run_cmd,
+    expected_prefix,
 ):
     format_string = (
-        f', "---cpus", "{cpu}"' if cpu else "",
-        f', "---memory", "{expected_bytes}B"' if memory else "",
+        f', "{expected_prefix}cpus", "{cpu}"' if cpu else "",
+        f', "{expected_prefix}memory", "{expected_bytes}B"' if memory else "",
     )
-    expected = expected % format_string
+    expected_run_cmd = expected_run_cmd % format_string
+    expected_build_cmd_call, excpected_run_cmd_call = "", ""
+    if expected_build_cmd:
+        expected_build_cmd_call = f"mocker.call({expected_build_cmd}, stderr=-2)"
+    if expected_run_cmd:
+        excpected_run_cmd_call = f"mocker.call({expected_run_cmd}, stderr=-2)"
+    expected = ", ".join(
+        filter(None, [expected_build_cmd_call, excpected_run_cmd_call])
+    )
     makepyfile_and_add_meta(
         f"""
         import subprocess
@@ -224,8 +248,7 @@ def test_run_component_executes_subprocess(
                                                return_value=b"Some dummy output")
             mocked_path = mocker.patch('viashpy.testing.Path.is_file', return_value=True)
             stdout = run_component(["bar"])
-            mocked_check_output.assert_called_once_with({expected},
-                                                        stderr=subprocess.STDOUT)
+            mocked_check_output.assert_has_calls([{expected}])
             assert stdout == b"Some dummy output"
         """,
         request.getfixturevalue(config_fixture),

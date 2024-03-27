@@ -27,7 +27,7 @@ functionality:
 platforms:
   - type: native
   - type: docker
-    image: python:3.10
+    image: python:3.12
     test_setup:
       - type: docker
         copy: ["filiberke /viashpy"]
