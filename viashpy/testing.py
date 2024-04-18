@@ -6,6 +6,7 @@ from .config import read_viash_config
 from pathlib import Path
 from functools import wraps
 from subprocess import CalledProcessError
+from __future__ import annotations
 import warnings
 
 logger = logging.getLogger(__name__)
