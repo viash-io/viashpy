@@ -8,7 +8,7 @@ Changelog
 New Functionality
 -----------------
 
-* Added support for viash 0.9.0 (#)
+* Added support for viash 0.9.0 (#23).
 
 Breaking Changes
 ----------------
