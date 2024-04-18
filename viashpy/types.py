@@ -1,3 +1,4 @@
 from typing import Literal
 
-Platform = Literal["native", "docker", "nextflow"]
+Engine = Literal["native", "docker", "nextflow"]
+Platform = Engine
