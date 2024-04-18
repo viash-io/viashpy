@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pytest
 import logging
 from ._run import run_build_component, viash_run, tobytesconverter
@@ -6,7 +7,6 @@ from .config import read_viash_config
 from pathlib import Path
 from functools import wraps
 from subprocess import CalledProcessError
-from __future__ import annotations
 import warnings
 
 logger = logging.getLogger(__name__)
