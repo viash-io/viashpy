@@ -135,11 +135,11 @@ def viash_source_config_path(meta_config_path, meta_config):
     """
     try:
         # meta_config is a parsed viash config, retreive the location of the source
-        return Path(meta_config["info"]["config"])
+        return Path(meta_config["build_info"]["config"])
     except KeyError:
-        # viash >= 0.9 defines build_info instead of info
+        # viash < 0.9 defines info instead of build_info
         try:
-            return Path(meta_config["build_info"]["config"])
+            return Path(meta_config["info"]["config"])
         except KeyError:
             # If .['info']['config'] or .['build_info']['config'] is not defined,
             # assume that the config is a source config
