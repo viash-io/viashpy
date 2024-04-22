@@ -5,19 +5,24 @@ Changelog
 0.7.0 (TBD)
 ===========
 
+New Functionality
+-----------------
+
+* Added support for viash 0.9.0 (#23).
+
 Breaking Changes
 ----------------
 
-* `run_component` now executes `viash run` with `--platform docker` when the test 
-  is executed inline (and not as a result of using 'viash test') instead of the first
-  platform that is defined in the config. Another platform can be specified by using
-  the `platform` keyword argument (#22).
+* `run_component` now executes `viash run` with `--engine docker` (or `--platform docker`) 
+  when the test is executed inline (and not as a result of using 'viash test') 
+  instead of the first engine that is defined in the config. Another engine can be
+  specified by using the `engine` keyword argument (#22).
 
 Minor Changes
 -------------
 
 * `run_component` now uses `cachedbuild` setup strategy when tests are executed inline
-  with platform `docker`. This makes sure that the docker image is update when it already
+  with engine `docker`. This makes sure that the docker image is update when it already
   exists on the system (#22).
 
 * Added debugging information about the calls that are made to `viash`. If you want to enable

@@ -46,6 +46,126 @@ def test_run_component_no_meta_variable_raises(pytester):
     assert result.ret != 0
 
 
+def test_run_viash_returns_unknown_viash_version_format_raises(
+    pytester, makepyfile_and_add_meta, dummy_config
+):
+    makepyfile_and_add_meta(
+        """
+        import subprocess
+        from pathlib import Path
+
+        def test_loading_run_component(mocker, run_component):
+            mocked = mocker.patch('viashpy._run.check_output', return_value=b"UNKNOWNVERSION")
+            run_component(["bar"])
+            mocked.assert_called_once_with([Path("foo"), "bar"],
+                                        stderr=subprocess.STDOUT)
+        """,
+        dummy_config,
+        "foo",
+    )
+    result = pytester.runpytest("-v")
+    result.stdout.fnmatch_lines(
+        [
+            "*Could not parse the version information as output by viash.*",
+        ]
+    )
+    assert result.ret != 0
+
+
+@pytest.mark.parametrize("viash_version", ["(0, 8, 2)", "(0, 9, 0)"])
+def test_run_both_platform_and_engine_raises(
+    pytester, makepyfile_and_add_meta, dummy_config, viash_version
+):
+    makepyfile_and_add_meta(
+        f"""
+        import subprocess
+        from pathlib import Path
+
+        def test_loading_run_component(mocker, run_component):
+            mocked_viash_check = mocker.patch('viashpy._run._get_viash_version', return_value={viash_version})
+            run_component(["bar"], platform="native", engine="native")
+        """,
+        dummy_config,
+        "foo",
+    )
+    result = pytester.runpytest("-v")
+    result.stdout.fnmatch_lines(
+        [
+            "*ValueError: Cannot pass both an 'engine' and a 'plaform'.*",
+        ]
+    )
+    assert result.ret != 0
+
+
+@pytest.mark.parametrize(
+    "viash_version, wrong_platform_or_engine",
+    [((0, 8, 2), "engine"), ((0, 9, 0), "platform")],
+)
+def test_engine_platform_specified_but_wrong_viash_version(
+    pytester,
+    makepyfile_and_add_meta,
+    dummy_config,
+    viash_version,
+    wrong_platform_or_engine,
+):
+    makepyfile_and_add_meta(
+        f"""
+        import subprocess
+        from functools import partial
+        from pathlib import Path
+
+        def test_loading_run_component(mocker, run_component):
+            mocked_viash_check = mocker.patch('viashpy._run._get_viash_version',
+                                              return_value=({','.join(map(str, viash_version))}))
+            run_component(["bar"], {wrong_platform_or_engine}="native")
+        """,
+        dummy_config,
+        "foo",
+    )
+    result = pytester.runpytest("-v")
+    correct_arg = "engine" if wrong_platform_or_engine == "platform" else "platform"
+    result.stdout.fnmatch_lines(
+        [
+            f"*ValueError: Viash version {'.'.join(map(str, viash_version))} requires using "
+            f"'{correct_arg}' instead of '{wrong_platform_or_engine}'.*",
+        ]
+    )
+    assert result.ret != 0
+
+
+def test_could_not_get_viash_version_raises(
+    pytester, makepyfile_and_add_meta, dummy_config
+):
+    makepyfile_and_add_meta(
+        """
+        import subprocess
+        from functools import partial
+        from pathlib import Path
+
+        def test_loading_run_component(mocker, run_component):
+            mocked_viash_check = mocker.patch('viashpy._run.check_output',
+                                              side_effect=subprocess.CalledProcessError(1, "foo"))
+            run_component(["bar"], platform="native")
+        """,
+        dummy_config,
+        "foo",
+    )
+    result = pytester.runpytest("-v")
+    result.stdout.fnmatch_lines(
+        [
+            "*subprocess.CalledProcessError: Command 'foo' returned non-zero exit status 1.*",
+        ]
+    )
+    assert result.ret != 0
+
+
+@pytest.mark.parametrize(
+    "viash_version, platform_or_engine",
+    [
+        ("viash 0.8.2 (c) 2020 Data Intuitive", "platform"),
+        ("viash 0.9.0 (c) 2020 Data Intuitive", "engine"),
+    ],
+)
 @pytest.mark.parametrize(
     "memory_pb, memory_tb, memory_gb, memory_mb, memory_kb, memory_b, expected_bytes, expected_warning",
     [
@@ -135,6 +255,8 @@ def test_run_component_different_memory_specification_warnings(
     memory_b,
     expected_bytes,
     expected_warning,
+    viash_version,
+    platform_or_engine,
 ):
     expected_memory_args = ", "
     memory_specifiers = [
@@ -151,8 +273,8 @@ def test_run_component_different_memory_specification_warnings(
     if any(memory_specifiers):
         expected_memory_args = f', "--memory", "{expected_bytes}B", '
     expected_base_command = (
-        '["viash", "run", Path(meta["config"]), "-p", "docker", "-c",'
-        "\".platforms[.type == 'docker'].target_tag := 'test'\""
+        f'["viash", "run", Path(meta["config"]), "--{platform_or_engine}", "docker", "-c",'
+        f"\".{platform_or_engine}s[.type == 'docker'].target_tag := 'test'\""
     )
     expected_build_call = (
         f"mocker.call({expected_base_command}, "
@@ -170,10 +292,11 @@ def test_run_component_different_memory_specification_warnings(
 
         def test_loading_run_component(mocker, run_component):
             mocked_check_output = mocker.patch('viashpy._run.check_output',
-                                               return_value=b"Some dummy output")
+                                               side_effect=[b"{viash_version}", None, b"Some dummy output"])
             mocked_path = mocker.patch('viashpy.testing.Path.is_file', return_value=True)
             stdout = run_component(["bar"])
-            mocked_check_output.assert_has_calls([{expected_build_call},
+            mocked_check_output.assert_has_calls([mocker.call(['viash', '--version']),
+                                                  {expected_build_call},
                                                   {expected_run_call}])
             assert stdout == b"Some dummy output"
         """,
@@ -191,10 +314,65 @@ def test_run_component_different_memory_specification_warnings(
     if expected_warning:
         result.stdout.fnmatch_lines(
             [
-                "*Different values were defined in the 'meta' dictionary that limit memory, choosing the one with the smallest unit.*"
+                "*Different values were defined in the 'meta' dictionary that "
+                "limit memory, choosing the one with the smallest unit.*"
             ]
         )
     assert result.ret == 0
+
+
+@pytest.mark.parametrize(
+    "viash_version, platform_or_engine",
+    [((0, 8, 2), "platform"), ((0, 9, 0), "engine")],
+)
+@pytest.mark.parametrize(
+    "expected_build_cmd, expected_run_cmd",
+    [
+        (
+            '["viash", "run", Path(meta["config"]), "--{0}", "docker", "-c", '
+            '".{0}s[.type == \'docker\'].target_tag := \'test\'", "--", "---setup", "cachedbuild"]',
+            '["viash", "run", Path(meta["config"]), "--{0}", "docker", '
+            '"-c", ".{0}s[.type == \'docker\'].target_tag := \'test\'", "--", "bar"]',
+        ),
+    ],
+)
+def test_run_component_set_platform_or_engine(
+    pytester,
+    makepyfile_and_add_meta,
+    dummy_config,
+    expected_build_cmd,
+    expected_run_cmd,
+    viash_version,
+    platform_or_engine,
+):
+    expected_build_cmd_call, excpected_run_cmd_call = "", ""
+    if expected_build_cmd:
+        expected_build_cmd = expected_build_cmd.format(platform_or_engine)
+        expected_build_cmd_call = f"mocker.call({expected_build_cmd}, stderr=-2)"
+    if expected_run_cmd:
+        expected_run_cmd = expected_run_cmd.format(platform_or_engine)
+        excpected_run_cmd_call = f"mocker.call({expected_run_cmd}, stderr=-2)"
+    expected = ", ".join(
+        filter(None, [expected_build_cmd_call, excpected_run_cmd_call])
+    )
+    makepyfile_and_add_meta(
+        f"""
+        import subprocess
+        from pathlib import Path
+
+        def test_loading_run_component(mocker, run_component):
+            mocked_viash_check = mocker.patch('viashpy._run._get_viash_version', return_value={viash_version})
+            mocked_check_output = mocker.patch('viashpy._run.check_output', return_value=b"Some dummy output")
+            mocked_path = mocker.patch('viashpy.testing.Path.is_file', return_value=True)
+            stdout = run_component(["bar"], {platform_or_engine}="docker")
+            mocked_check_output.assert_has_calls([{expected}])
+            assert stdout == b"Some dummy output"
+        """,
+        dummy_config,
+        "foo",
+    )
+    result = pytester.runpytest("-v")
+    result.assert_outcomes(passed=1)
 
 
 @pytest.mark.parametrize("memory, expected_bytes", [(None, None), (6, 6442450944)])
@@ -204,9 +382,9 @@ def test_run_component_different_memory_specification_warnings(
     [
         (
             "dummy_config",
-            '["viash", "run", Path(meta["config"]), "-p", "docker", "-c", '
+            '["viash", "run", Path(meta["config"]), "--platform", "docker", "-c", '
             '".platforms[.type == \'docker\'].target_tag := \'test\'", "--", "---setup", "cachedbuild"]',
-            '["viash", "run", Path(meta["config"]), "-p", "docker", '
+            '["viash", "run", Path(meta["config"]), "--platform", "docker", '
             '"-c", ".platforms[.type == \'docker\'].target_tag := \'test\'"%s%s, "--", "bar"]',
             "--",
         ),
@@ -230,14 +408,24 @@ def test_run_component_executes_subprocess(
         f', "{expected_prefix}memory", "{expected_bytes}B"' if memory else "",
     )
     expected_run_cmd = expected_run_cmd % format_string
-    expected_build_cmd_call, excpected_run_cmd_call = "", ""
+    (
+        expected_version_cmd,
+        expected_build_cmd_call,
+        excpected_run_cmd_call,
+        mocked_return,
+    ) = [""] * 4
     if expected_build_cmd:
+        mocked_return += 'b"viash 0.8.2 (c) 2020 Data Intuitive", None, '
         expected_build_cmd_call = f"mocker.call({expected_build_cmd}, stderr=-2)"
     if expected_run_cmd:
         excpected_run_cmd_call = f"mocker.call({expected_run_cmd}, stderr=-2)"
     expected = ", ".join(
-        filter(None, [expected_build_cmd_call, excpected_run_cmd_call])
+        filter(
+            None,
+            [expected_version_cmd, expected_build_cmd_call, excpected_run_cmd_call],
+        )
     )
+    mocked_return += 'b"Some dummy output"'
     makepyfile_and_add_meta(
         f"""
         import subprocess
@@ -245,7 +433,7 @@ def test_run_component_executes_subprocess(
 
         def test_loading_run_component(mocker, run_component):
             mocked_check_output = mocker.patch('viashpy._run.check_output',
-                                               return_value=b"Some dummy output")
+                                               side_effect=[{mocked_return}])
             mocked_path = mocker.patch('viashpy.testing.Path.is_file', return_value=True)
             stdout = run_component(["bar"])
             mocked_check_output.assert_has_calls([{expected}])

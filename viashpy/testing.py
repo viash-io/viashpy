@@ -1,7 +1,8 @@
+from __future__ import annotations
 import pytest
 import logging
 from ._run import run_build_component, viash_run, tobytesconverter
-from .types import Platform
+from .types import Engine, Platform
 from .config import read_viash_config
 from pathlib import Path
 from functools import wraps
@@ -134,10 +135,15 @@ def viash_source_config_path(meta_config_path, meta_config):
     """
     try:
         # meta_config is a parsed viash config, retreive the location of the source
-        return Path(meta_config["info"]["config"])
+        return Path(meta_config["build_info"]["config"])
     except KeyError:
-        # If .['info']['config'] is not defined, assume that the config is a source config
-        return meta_config_path
+        # viash < 0.9 defines info instead of build_info
+        try:
+            return Path(meta_config["info"]["config"])
+        except KeyError:
+            # If .['info']['config'] or .['build_info']['config'] is not defined,
+            # assume that the config is a source config
+            return meta_config_path
 
 
 @pytest.fixture
@@ -184,13 +190,16 @@ def run_component(
     if viash_source_config_path.is_file():
 
         @run_and_handle_errors
-        def wrapper(args_as_list, platform: Platform = "docker"):
+        def wrapper(
+            args_as_list, engine: Engine | None = None, platform: Platform | None = None
+        ):
             return viash_run(
                 viash_source_config_path,
                 args_as_list,
                 viash_location=viash_executable,
                 cpus=cpus,
                 memory=memory_bytes,
+                engine=engine,
                 platform=platform,
             )
 
