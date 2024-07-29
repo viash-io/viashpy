@@ -64,7 +64,9 @@ def makepyfile_and_add_meta(pytester, write_config):
         for i, node in enumerate(ast.iter_child_nodes(parsed_module_contents)):
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 # Keep the imports
-                new_contents.append(dedent(ast.get_source_segment(test_module_contents_modified, node)))
+                new_contents.append(
+                    dedent(ast.get_source_segment(test_module_contents_modified, node))
+                )
                 continue
             break
         # Add the meta field
@@ -74,7 +76,9 @@ def makepyfile_and_add_meta(pytester, write_config):
         leftover_nodes = ast.iter_child_nodes(parsed_module_contents)
         consume(leftover_nodes, i)
         for node in leftover_nodes:
-            new_contents.append(ast.get_source_segment(test_module_contents_modified, node))
+            new_contents.append(
+                ast.get_source_segment(test_module_contents_modified, node)
+            )
         pytester.makepyfile("\n".join(new_contents))
         return config_file
 
