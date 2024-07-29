@@ -3,10 +3,15 @@ import ast
 from textwrap import dedent
 from pathlib import Path
 import tarfile
+from itertools import islice
 
 
 @pytest.fixture
 def makepyfile_and_add_meta(pytester, write_config):
+
+    def consume(iterator, n=None):
+        next(islice(iterator, n, n), None)
+
     def wrapper(
         test_module_contents,
         viash_config,
@@ -50,16 +55,27 @@ def makepyfile_and_add_meta(pytester, write_config):
                 meta["{memory_specifier}"] = {memory_value}
                 """
                 )
-
+        new_contents = []
+        # Parse the contents of the original test module and the meta fields to insert into it
         parsed_to_insert = ast.parse(to_insert)
-        parsed_module_contents = ast.parse(dedent(test_module_contents))
-        i = 0
-        for i, elem in enumerate(parsed_module_contents.body):
-            if isinstance(elem, (ast.Import, ast.ImportFrom)):
+        test_module_contents_modified = dedent(test_module_contents).strip("\n")
+        parsed_module_contents = ast.parse(test_module_contents_modified)
+        # First parse the imports from the test module, and add the meta fields after those
+        for i, node in enumerate(ast.iter_child_nodes(parsed_module_contents)):
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                # Keep the imports
+                new_contents.append(dedent(ast.get_source_segment(test_module_contents_modified, node)))
                 continue
             break
-        parsed_module_contents.body.insert(i, parsed_to_insert)
-        pytester.makepyfile(ast.unparse(parsed_module_contents))
+        # Add the meta field
+        for node in ast.iter_child_nodes(parsed_to_insert):
+            new_contents.append(ast.get_source_segment(to_insert, node))
+        # Now add the rest of the original test module
+        leftover_nodes = ast.iter_child_nodes(parsed_module_contents)
+        consume(leftover_nodes, i)
+        for node in leftover_nodes:
+            new_contents.append(ast.get_source_segment(test_module_contents_modified, node))
+        pytester.makepyfile("\n".join(new_contents))
         return config_file
 
     return wrapper
