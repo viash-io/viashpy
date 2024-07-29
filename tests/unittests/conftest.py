@@ -9,9 +9,6 @@ from itertools import islice
 @pytest.fixture
 def makepyfile_and_add_meta(pytester, write_config):
 
-    def consume(iterator, n=None):
-        next(islice(iterator, n, n), None)
-
     def wrapper(
         test_module_contents,
         viash_config,
