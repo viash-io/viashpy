@@ -73,9 +73,15 @@ def makepyfile_and_add_meta(pytester, write_config):
         for node in ast.iter_child_nodes(parsed_to_insert):
             new_contents.append(ast.get_source_segment(to_insert, node))
         # Now add the rest of the original test module
-        leftover_nodes = ast.iter_child_nodes(parsed_module_contents)
-        consume(leftover_nodes, i)
-        for node in leftover_nodes:
+        for node in islice(ast.iter_child_nodes(parsed_module_contents), i, None):
+            try:
+                decorators = node.decorator_list
+            except AttributeError:
+                decorators = []
+            for decorator in decorators:
+                new_contents.append(
+                    f"@{ast.get_source_segment(test_module_contents_modified, decorator)}"
+                )
             new_contents.append(
                 ast.get_source_segment(test_module_contents_modified, node)
             )
