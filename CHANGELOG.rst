@@ -8,8 +8,7 @@ Changelog
 New Functionality
 -----------------
 
-* Add support for python 3.13 (#)
-
+* Add support for python 3.13 (#26)
 
 0.8.0 (29/07/2024)
 ==================
