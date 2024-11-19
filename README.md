@@ -15,18 +15,18 @@ To run the tests, clone the repository and install the development requirements 
 pip install .[dev] # Do not forget to quote this if you are using zsh
 ```
 
-By default, viashpy can tested against different python versions (more specifically 3.7 to 3.11) using `tox`. 
+By default, viashpy can tested against different python versions (more specifically 3.8 to 3.13) using `tox`. 
 These versions of python must be made available to tox (by adding them to your `PATH` environment variable), for example by installing and enabling them using `pyenv`.
 
 Afterwards, running the tests is a matter of executing: 
 ```bash
-tox .
+tox
 ```
 
 Alternatively, if you wish to test for the python version installed on your system only, you can choose to only test `-e` parameter.
 ```bash
-# Uses python3.7
-tox -e py3.7
+# Uses python3.8
+tox -e py3.8
 ```
 
 # License

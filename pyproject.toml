@@ -6,7 +6,7 @@ build-backend = 'setuptools.build_meta'
 write_to = "viashpy/__version__.py"
 
 [tool.black]
-target-version = ['py39', 'py310', 'py311', 'py312']
+target-version = ['py39', 'py310', 'py311', 'py312', 'py313']
 exclude = '''
 (
   \.egg
