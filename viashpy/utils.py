@@ -63,3 +63,33 @@ def extract_tar(pathname: Path | str, output_dir: Path | str):
         members_to_move = [mem for mem in members if mem.path != Path(".")]
         open_tar.extractall(unpacked_path, members=members_to_move)
     return unpacked_path
+
+# helper function for cheching whether something is a gzip
+def is_gz_file(path: Path) -> bool:
+    with open(path, "rb") as file:
+        return file.read(2) == b"\x1f\x8b"
+
+# if {par_value} is a Path, extract it to a temp_dir_path and return the resulting path
+def extract_if_need_be(pathname: Path | str, output_dir: Path | str) -> Path:
+    pathname, output_dir = Path(pathname), Path(output_dir)
+
+    if pathname.is_file() and tarfile.is_tarfile(pathname):
+        logger.info("Tar detected; extracting %s", pathname)
+        return extract_tar(pathname, output_dir)
+
+    elif pathname.is_file() and is_gz_file(pathname):
+        # Remove extension (if it exists)
+        extaction_file_name = Path(pathname.stem)
+        unpacked_path = output_dir / extaction_file_name
+        logger.info("Gzip detected; extracting %s", pathname)
+
+        import gzip
+        import shutil
+        
+        with gzip.open(pathname, "rb") as f_in:
+            with open(unpacked_path, "wb") as f_out:
+                shutil.copyfileobj(f_in, f_out)
+        return unpacked_path
+
+    else:
+        return pathname
