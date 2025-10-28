@@ -5,10 +5,15 @@ Changelog
 0.10.0 (19/07/2024)
 ==================
 
+Breaking Changes
+----------------
+
+* Dropped support for python 3.8 (PR #35)
+
 New Functionality
 -----------------
 
-* Added support for python 3.14 (#)
+* Added support for python 3.14 (#35)
 
 0.9.0 (19/07/2024)
 ==================
