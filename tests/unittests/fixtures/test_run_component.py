@@ -27,12 +27,10 @@ def test_run_component_no_meta_variable_raises(pytester):
     Make sure the run_component fixture raises SubprocessError
     when the test module does not contain the meta variable.
     """
-    pytester.makepyfile(
-        """
+    pytester.makepyfile("""
         def test_loading_run_component(run_component):
             raise NotImplementedError
-        """
-    )
+        """)
 
     # run pytest with the following cmd args
     result = pytester.runpytest("-v")

@@ -1,6 +1,5 @@
 def test_get_meta_dict(pytester):
-    pytester.makepyfile(
-        """
+    pytester.makepyfile("""
         import sys
         meta = {}
 
@@ -8,8 +7,7 @@ def test_get_meta_dict(pytester):
             this_mod = sys.modules[__name__]
             nonlocal_meta = this_mod.meta
             assert id(meta) == id(nonlocal_meta)
-        """
-    )
+        """)
     result = pytester.runpytest("-v")
     result.stdout.fnmatch_lines(
         [
@@ -20,14 +18,12 @@ def test_get_meta_dict(pytester):
 
 
 def test_get_meta_executable(pytester):
-    pytester.makepyfile(
-        """
+    pytester.makepyfile("""
         meta = {"executable": "foo"}
 
         def test_get_executable(executable):
             assert executable == "foo"
-        """
-    )
+        """)
     result = pytester.runpytest("-v")
     result.stdout.fnmatch_lines(
         [
@@ -38,14 +34,12 @@ def test_get_meta_executable(pytester):
 
 
 def test_get_meta_executable_not_found_raises(pytester):
-    pytester.makepyfile(
-        """
+    pytester.makepyfile("""
         meta = {}
 
         def test_get_executable(executable):
             raise NotImplementError
-        """
-    )
+        """)
     result = pytester.runpytest("-v")
     result.stdout.fnmatch_lines(
         [
@@ -56,12 +50,10 @@ def test_get_meta_executable_not_found_raises(pytester):
 
 
 def test_meta_not_defined_raises(pytester):
-    pytester.makepyfile(
-        """
+    pytester.makepyfile("""
         def test_meta_not_defined_raises(meta):
             raise NotImplementedError
-        """
-    )
+        """)
     result = pytester.runpytest("-v")
     result.stdout.fnmatch_lines(
         [
@@ -72,15 +64,13 @@ def test_meta_not_defined_raises(pytester):
 
 
 def test_meta_config_path(pytester):
-    pytester.makepyfile(
-        """
+    pytester.makepyfile("""
         from pathlib import Path
         meta = {"config": "/lorem/ipsum/bar.vsh.yaml"}
 
         def test_get_config_path(meta_config_path):
             assert meta_config_path == Path("/lorem/ipsum/bar.vsh.yaml")
-        """
-    )
+        """)
     result = pytester.runpytest("-v")
     result.stdout.fnmatch_lines(
         [
@@ -91,15 +81,13 @@ def test_meta_config_path(pytester):
 
 
 def test_meta_config_path_not_defined_raises(pytester):
-    pytester.makepyfile(
-        """
+    pytester.makepyfile("""
         from pathlib import Path
         meta = {}
 
         def test_get_config_path(meta_config_path):
             assert meta_config_path == Path("/lorem/ipsum/bar.vsh.yaml")
-        """
-    )
+        """)
     result = pytester.runpytest("-v")
     result.stdout.fnmatch_lines(
         [

@@ -22,21 +22,17 @@ def makepyfile_and_add_meta(pytester, write_config):
         memory_b=None,
     ):
         config_file = write_config(viash_config)
-        to_insert = dedent(
-            f"""\
+        to_insert = dedent(f"""\
         try:
             meta["config"] = "{str(config_file)}"
         except NameError:
             meta = {{"config": "{str(config_file)}"}}
         meta["executable"] = "{viash_executable}"
-        """
-        )
+        """)
         if cpu:
-            to_insert += dedent(
-                f"""\
+            to_insert += dedent(f"""\
             meta["cpus"] = {cpu}
-            """
-            )
+            """)
         memory_specifiers = {
             "memory_pb": memory_pb,
             "memory_tb": memory_tb,
@@ -47,11 +43,9 @@ def makepyfile_and_add_meta(pytester, write_config):
         }
         for memory_specifier, memory_value in memory_specifiers.items():
             if memory_value:
-                to_insert += dedent(
-                    f"""\
+                to_insert += dedent(f"""\
                 meta["{memory_specifier}"] = {memory_value}
-                """
-                )
+                """)
         new_contents = []
         # Parse the contents of the original test module and the meta fields to insert into it
         parsed_to_insert = ast.parse(to_insert)
