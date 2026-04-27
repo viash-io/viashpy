@@ -10,6 +10,8 @@ Breaking Changes
 
 * Dropped support for python 3.8 (PR #35)
 
+* Dropped support for python 3.9 (PR #)
+
 New Functionality
 -----------------
 
