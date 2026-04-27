@@ -2,13 +2,15 @@
 Changelog
 *********
 
-0.10.0 (19/07/2024)
+0.10.0 (27/04/2026)
 ==================
 
 Breaking Changes
 ----------------
 
 * Dropped support for python 3.8 (PR #35)
+
+* Dropped support for python 3.9 (PR #46)
 
 New Functionality
 -----------------
