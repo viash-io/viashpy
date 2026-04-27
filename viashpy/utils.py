@@ -59,7 +59,7 @@ def extract_tar(pathname: Path | str, output_dir: Path | str):
         if len(root_dirs) == 1:
             root_dir = root_dirs[0].name
             for mem in members:
-                mem.path = Path(mem.path).relative_to(root_dir)
-        members_to_move = [mem for mem in members if mem.path != Path(".")]
+                mem.path = str(Path(mem.path).relative_to(root_dir))
+        members_to_move = [mem for mem in members if Path(mem.path) != Path(".")]
         open_tar.extractall(unpacked_path, members=members_to_move)
     return unpacked_path
