@@ -1,7 +1,7 @@
 from __future__ import annotations
 import pytest
 import logging
-from ._run import run_build_component, viash_run, tobytesconverter
+from ._run import run_built_component, viash_run, tobytesconverter
 from .types import Engine, Platform
 from .config import read_viash_config
 from pathlib import Path
@@ -158,7 +158,7 @@ def run_component(
     """
     Returns a function that allows the user to run a viash component.
     The function will use 'viash run' to execute the component or run
-    the executable (the build component), depending wether or not the
+    the executable (the built component), depending wether or not the
     test is executed inline or as a result of using 'viash test'.
     This has the benefit of using the latest changes from the source code
     when testing the component inline without manually needing to rebuild.
@@ -166,7 +166,7 @@ def run_component(
     If the test module defines meta['config'] which points to an existing file,
     the function will use 'viash run' to run the component. In contrast,
     if meta['config'] is a parsed config (as a result of executing
-    tests using 'viash test'), the build component executable will be used
+    tests using 'viash test'), the built component executable will be used
     instead.
     """
     __tracebackhide__ = True
@@ -212,7 +212,7 @@ def run_component(
 
     @run_and_handle_errors
     def wrapper(args_as_list):
-        return run_build_component(
+        return run_built_component(
             executable, args_as_list, cpus=cpus, memory=memory_bytes
         )
 

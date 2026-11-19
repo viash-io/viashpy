@@ -1,7 +1,7 @@
 from __future__ import annotations
 from subprocess import check_output, STDOUT, DEVNULL, PIPE, CalledProcessError
 from pathlib import Path
-from typing import Any
+from typing import Any, IO
 from .types import Engine, Platform
 import logging
 import re
@@ -102,21 +102,85 @@ def _check_platform_or_engine(
         return "engine", engine
 
 
-def run_build_component(
-    executable_location: str | Path,
+def run_built_component(
+    component: str | Path,
     args: list[str],
     *,
     cpus: int | None = None,
-    memory: str | None,
-    stderr: STDOUT | PIPE | DEVNULL | -1 | -2 | -3 = STDOUT,
+    memory: str | None = None,
+    viash_location: str | Path = "viash",
+    stderr: int | IO[bytes] | None = STDOUT,
     **popen_kwargs,
 ):
-    executable_location = Path(executable_location)
-    if not executable_location.is_file():
-        raise FileNotFoundError(
-            f"{executable_location} does not exist or is not a file."
-        )
-    full_command = [executable_location] + args + _format_cpu_and_memory(cpus, memory)
+    """
+    Run a component that has already been built.
+
+    The component can be given in one of two ways:
+
+    * The path to an executable that was built locally with 'viash build'
+      or 'viash ns build'. The executable is run directly.
+    * A reference to a component published on Viash Hub, of the form
+      'vsh://<package>[@<version>]/<component>' (e.g. 'vsh://toolbox@v0.1.0/yq').
+      The component is run with 'viash run', which downloads the pre-built
+      package bundle from Viash Hub and caches it. Without a version, the
+      latest version is used. Requires viash 0.10.0 or newer.
+
+    The resource limits reach the component as its '---cpus' and '---memory'
+    arguments.
+
+    Parameters
+    ----------
+    component
+        Path to a built component executable, or a Viash Hub reference
+        starting with 'vsh://'.
+    args
+        Arguments to pass to the component.
+    cpus
+        Number of CPUs the component may use. Not passed when None.
+    memory
+        Amount of memory the component may use, with one of the suffixes
+        B, KB, MB, GB, TB or PB (e.g. '10GB'). Not passed when None.
+    viash_location
+        The viash executable to use for a Viash Hub reference. Not used
+        when `component` is a path.
+    stderr
+        Where to send the standard error of the process. The default,
+        `subprocess.STDOUT`, merges it into the returned output. Accepts the
+        same values as the `stderr` argument of `subprocess.check_output`.
+    **popen_kwargs
+        Extra keyword arguments passed to `subprocess.check_output`.
+
+    Returns
+    -------
+    bytes
+        The output of the component.
+
+    Raises
+    ------
+    FileNotFoundError
+        When `component` is a path that does not exist or is not a file.
+    ValueError
+        When `component` is a Viash Hub reference and the viash version
+        is older than 0.10.0.
+    subprocess.CalledProcessError
+        When the component, or 'viash run', exits with a non-zero exit code.
+    """
+    if str(component).startswith("vsh://"):
+        viash_version = _get_viash_version(viash_location)
+        if viash_version < (0, 10, 0):
+            raise ValueError(
+                f"Running a component from Viash Hub ('{component}') requires "
+                "viash 0.10.0 or newer, found "
+                f"{'.'.join(map(str, viash_version))}."
+            )
+        command = [viash_location, "run", component, "--"]
+    else:
+        component = Path(component)
+        if not component.is_file():
+            raise FileNotFoundError(f"{component} does not exist or is not a file.")
+        command = [component]
+
+    full_command = command + args + _format_cpu_and_memory(cpus, memory)
     logger.debug("Running '%s'", " ".join(map(str, full_command)))
     return check_output(full_command, stderr=stderr, **popen_kwargs)
 
@@ -130,7 +194,7 @@ def viash_run(
     engine: Engine | None = None,
     platform: Platform | None = None,
     viash_location: str | Path = "viash",
-    stderr: STDOUT | PIPE | DEVNULL | -1 | -2 | -3 = STDOUT,
+    stderr: int | IO[bytes] | None = STDOUT,
     **popen_kwargs,
 ):
     config = Path(config)

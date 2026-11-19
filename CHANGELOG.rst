@@ -2,6 +2,18 @@
 Changelog
 *********
 
+Unreleased
+==========
+
+New Functionality
+-----------------
+
+* `run_built_component` is now part of the public API and can be imported
+  using `from viashpy import run_built_component`.
+
+* `run_built_component` can run a component published on Viash Hub using a
+  `vsh://<package>[@<version>]/<component>` reference (requires viash 0.10.0 or newer).
+
 0.10.0 (27/04/2026)
 ==================
 
