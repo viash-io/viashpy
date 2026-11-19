@@ -2,6 +2,21 @@
 Changelog
 *********
 
+Unreleased
+==========
+
+Breaking Changes
+----------------
+
+* Dropped support for python 3.10, which has reached end-of-life
+
+* Dropped support for pytest 6, as it was only tested on python 3.10. pytest >= 7.0 is now required
+
+New Functionality
+-----------------
+
+* Added support for python 3.15
+
 0.10.0 (27/04/2026)
 ==================
 
