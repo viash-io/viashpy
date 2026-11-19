@@ -1,5 +1,5 @@
 from __future__ import annotations
-from subprocess import check_output, STDOUT, DEVNULL, PIPE, CalledProcessError
+from subprocess import check_output, STDOUT, CalledProcessError
 from pathlib import Path
 from typing import Any, IO
 from .types import Engine, Platform
@@ -50,9 +50,12 @@ def _format_cpu_and_memory(cpus, memory, arg_prefix="---"):
     return result
 
 
-def _get_viash_version(viash_executable):
+def _get_viash_version(viash_executable, **popen_kwargs):
     try:
-        version_string = check_output([viash_executable, "--version"]).decode().strip()
+        version_output = check_output([viash_executable, "--version"], **popen_kwargs)
+        if isinstance(version_output, bytes):
+            version_output = version_output.decode()
+        version_string = version_output.strip()
         version_pattern = re.compile(
             r"^viash ([0-9]+.[0-9]+.[0-9]+).* \(c\) [0-9]{4} Data Intuitive$"
         )
@@ -166,7 +169,7 @@ def run_built_component(
         When the component, or 'viash run', exits with a non-zero exit code.
     """
     if str(component).startswith("vsh://"):
-        viash_version = _get_viash_version(viash_location)
+        viash_version = _get_viash_version(viash_location, **popen_kwargs)
         if viash_version < (0, 10, 0):
             raise ValueError(
                 f"Running a component from Viash Hub ('{component}') requires "
@@ -178,7 +181,9 @@ def run_built_component(
         component = Path(component)
         if not component.is_file():
             raise FileNotFoundError(f"{component} does not exist or is not a file.")
-        command = [component]
+        # Make the path absolute: a bare name like 'my_component' (also what
+        # Path('./my_component') becomes) would otherwise be looked up on PATH.
+        command = [component.absolute()]
 
     full_command = command + args + _format_cpu_and_memory(cpus, memory)
     logger.debug("Running '%s'", " ".join(map(str, full_command)))
@@ -202,7 +207,7 @@ def viash_run(
         raise FileNotFoundError(f"{config} does not exist or is not a file.")
     args = ["--"] + args
 
-    viash_version = _get_viash_version(viash_location)
+    viash_version = _get_viash_version(viash_location, **popen_kwargs)
     platform_or_engine, engine_or_platform_val = _check_platform_or_engine(
         viash_version, engine=engine, platform=platform
     )

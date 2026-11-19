@@ -178,10 +178,11 @@ def run_component(
             try:
                 return function_to_run(*args, **kwargs)
             except CalledProcessError as e:
+                output = e.stdout
+                if isinstance(output, bytes):
+                    output = output.decode("utf-8")
                 with caplog.at_level(logging.DEBUG):
-                    logger.info(
-                        f"Captured component output was:\n{e.stdout.decode('utf-8')}"
-                    )
+                    logger.info(f"Captured component output was:\n{output}")
                     # Create a new CalledProcessError object. This removes verbosity from the original object
                     raise e.with_traceback(None) from None
 

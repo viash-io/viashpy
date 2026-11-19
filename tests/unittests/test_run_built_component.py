@@ -1,6 +1,9 @@
 from subprocess import STDOUT
+import os
+from pathlib import Path
 import pytest
 from viashpy import run_built_component
+from viashpy._run import _get_viash_version
 
 
 def test_run_built_component_executable_does_not_exist_raises():
@@ -84,3 +87,40 @@ def test_run_built_component_viash_hub_old_viash_raises(mocker):
     with pytest.raises(ValueError, match=mesg):
         run_built_component("vsh://toolbox/yq", [])
     mocked_check_output.assert_not_called()
+
+
+def test_run_built_component_relative_path_is_made_absolute(
+    mocker, tmp_path, monkeypatch
+):
+    (tmp_path / "my_component").touch()
+    monkeypatch.chdir(tmp_path)
+    mocked_check_output = mocker.patch("viashpy._run.check_output")
+    for component in ("./my_component", "my_component", Path("my_component")):
+        mocked_check_output.reset_mock()
+        run_built_component(component, [])
+        mocked_check_output.assert_called_once_with(
+            [tmp_path / "my_component"], stderr=STDOUT
+        )
+
+
+def test_run_built_component_viash_hub_version_check_uses_popen_kwargs(mocker):
+    mocked_version = mocker.patch(
+        "viashpy._run._get_viash_version", return_value=(0, 10, 0)
+    )
+    mocker.patch("viashpy._run.check_output")
+    env = dict(os.environ, PATH="/opt/viash/bin")
+    run_built_component("vsh://toolbox/yq", [], env=env, cwd="/proj", timeout=5)
+    mocked_version.assert_called_once_with("viash", env=env, cwd="/proj", timeout=5)
+
+
+@pytest.mark.parametrize(
+    "popen_kwargs, output",
+    [
+        ({}, b"viash 0.10.0 (c) 2025 Data Intuitive\n"),
+        ({"text": True}, "viash 0.10.0 (c) 2025 Data Intuitive\n"),
+    ],
+)
+def test_get_viash_version_bytes_or_text_output(mocker, popen_kwargs, output):
+    mocked_check_output = mocker.patch("viashpy._run.check_output", return_value=output)
+    assert _get_viash_version("viash", **popen_kwargs) == (0, 10, 0)
+    mocked_check_output.assert_called_once_with(["viash", "--version"], **popen_kwargs)
