@@ -52,7 +52,19 @@ def _format_cpu_and_memory(cpus, memory, arg_prefix="---"):
 
 def _get_viash_version(viash_executable, **popen_kwargs):
     try:
-        version_output = check_output([viash_executable, "--version"], **popen_kwargs)
+        try:
+            version_output = check_output(
+                [viash_executable, "--version"], **popen_kwargs
+            )
+        except FileNotFoundError as e:
+            # Without this, a wrong viash location surfaces as a bare
+            # '[Errno 2] No such file or directory', which is easily mistaken
+            # for a missing component or config.
+            raise FileNotFoundError(
+                f"Could not find the viash executable '{viash_executable}'. "
+                "Please make sure that viash is in your PATH or that "
+                "'viash_location' points to the viash binary."
+            ) from e
         if isinstance(version_output, bytes):
             version_output = version_output.decode()
         version_string = version_output.strip()
@@ -161,7 +173,10 @@ def run_built_component(
     Raises
     ------
     FileNotFoundError
-        When `component` is a path that does not exist or is not a file.
+        When `component` is a path that does not exist or is not a file, or
+        when `component` is a Viash Hub reference and `viash_location` does
+        not point to a viash executable. The error message tells the two
+        cases apart.
     ValueError
         When `component` is a Viash Hub reference and the viash version
         is older than 0.10.0.

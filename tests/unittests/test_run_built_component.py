@@ -164,3 +164,10 @@ def test_run_built_component_viash_hub_executes(tmp_path):
         memory="1GB",
     )
     assert output_file.read_text().strip() == "hello from viash hub"
+
+
+def test_run_built_component_viash_hub_wrong_viash_location_raises(tmp_path):
+    wrong_viash = tmp_path / "wrong" / "viash"
+    mesg = rf"Could not find the viash executable '{wrong_viash}'\."
+    with pytest.raises(FileNotFoundError, match=mesg):
+        run_built_component("vsh://toolbox/yq", [], viash_location=wrong_viash)
