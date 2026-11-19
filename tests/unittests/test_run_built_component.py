@@ -1,5 +1,6 @@
-from subprocess import STDOUT
+from subprocess import STDOUT, CalledProcessError
 import os
+import shutil
 from pathlib import Path
 import pytest
 from viashpy import run_built_component
@@ -124,3 +125,42 @@ def test_get_viash_version_bytes_or_text_output(mocker, popen_kwargs, output):
     mocked_check_output = mocker.patch("viashpy._run.check_output", return_value=output)
     assert _get_viash_version("viash", **popen_kwargs) == (0, 10, 0)
     mocked_check_output.assert_called_once_with(["viash", "--version"], **popen_kwargs)
+
+
+def _installed_viash_version():
+    if shutil.which("viash") is None:
+        return None
+    try:
+        return _get_viash_version("viash")
+    except (CalledProcessError, ValueError):
+        return None
+
+
+_VIASH_VERSION = _installed_viash_version()
+
+
+@pytest.mark.skipif(
+    _VIASH_VERSION is None or _VIASH_VERSION < (0, 10, 0),
+    reason="Running a component from Viash Hub requires viash 0.10.0 or newer "
+    f"(found: {'.'.join(map(str, _VIASH_VERSION)) if _VIASH_VERSION else 'none'}).",
+)
+def test_run_built_component_viash_hub_executes(tmp_path):
+    # Runs a real component from Viash Hub, without patching.
+    # Needs network access and docker.
+    input_file = tmp_path / "input.yaml"
+    input_file.write_text("foo:\n  bar: hello from viash hub\n")
+    output_file = tmp_path / "output.txt"
+    run_built_component(
+        "vsh://toolbox@v0.1.0/yq",
+        [
+            "--input",
+            str(input_file),
+            "--output",
+            str(output_file),
+            "--eval",
+            ".foo.bar",
+        ],
+        cpus=1,
+        memory="1GB",
+    )
+    assert output_file.read_text().strip() == "hello from viash hub"

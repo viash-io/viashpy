@@ -47,14 +47,25 @@ class TestRunUsingConfig:
         original_config = yaml_interface.load(
             Path(f"{meta['resources_dir']}/dummy_config.vsh.yaml")
         )
-        del original_config["functionality"]["test_resources"]
-        del original_config["functionality"]["resources"][1]
+        # viash < 0.9 nests these fields under 'functionality'
+        functionality = original_config.get("functionality", original_config)
+        del functionality["test_resources"]
+        del functionality["resources"][1]
         result_path = random_config_path()
         yaml_interface.dump(original_config, result_path)
         return result_path
 
     def test_run_component_check_correct_memory_syntax(self, run_component):
-        captured_output = run_component(["--output", "bar.txt"], platform="native")
+        # viash < 0.9 uses 'platform' instead of 'engine'
+        config = YAML(typ="safe", pure=True).load(
+            Path(f"{meta['resources_dir']}/dummy_config.vsh.yaml")
+        )
+        native = (
+            {"platform": "native"}
+            if "functionality" in config
+            else {"engine": "native"}
+        )
+        captured_output = run_component(["--output", "bar.txt"], **native)
         with open("bar.txt", "r") as open_output_file:
             contents = open_output_file.read()
             assert contents == "foo!"

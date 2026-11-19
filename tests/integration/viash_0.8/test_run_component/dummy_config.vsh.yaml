@@ -18,12 +18,12 @@ functionality:
         with open(par['output'], 'w') as open_output_file:
           open_output_file.write("foo!")
         print("This is a logging statement", flush=True, file=sys.stderr)
-    - path: ../../../
+    - path: ../../../../
       dest: filiberke
   test_resources:
     - type: python_script
-      path: test_script.py
-    - path: /tests/integration/test_run_component/dummy_config.vsh.yaml
+      path: ../../test_script.py
+    - path: /tests/integration/viash_0.8/test_run_component/dummy_config.vsh.yaml
 platforms:
   - type: native
   - type: docker
@@ -40,5 +40,5 @@ platforms:
           - default-jdk
       - type: docker
         run: |
-          curl -fsSL dl.viash.io | bash; mv viash /usr/local/bin/
+          curl -fsSL dl.viash.io | bash -s -- --tag "$(sed -n 's/^viash_version: *//p' /viashpy/_viash.yaml)"; mv viash /usr/local/bin/
   - type: nextflow
