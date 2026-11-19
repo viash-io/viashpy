@@ -5,17 +5,23 @@ Changelog
 Unreleased
 ==========
 
+New Functionality
+-----------------
+
+* `run_built_component` is now part of the public API and can be imported
+  using `from viashpy import run_built_component`.
+
+* `run_built_component` can run a component published on Viash Hub using a
+  `vsh://<package>[@<version>]/<component>` reference (requires viash 0.10.0 or newer).
+
+* Added support for python 3.15
+
 Breaking Changes
 ----------------
 
 * Dropped support for python 3.10, which has reached end-of-life
 
 * Dropped support for pytest 6, as it was only tested on python 3.10. pytest >= 7.0 is now required
-
-New Functionality
------------------
-
-* Added support for python 3.15
 
 0.10.0 (27/04/2026)
 ==================

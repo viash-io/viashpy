@@ -55,7 +55,7 @@ def test_run_viash_returns_unknown_viash_version_format_raises(
         def test_loading_run_component(mocker, run_component):
             mocked = mocker.patch('viashpy._run.check_output', return_value=b"UNKNOWNVERSION")
             run_component(["bar"])
-            mocked.assert_called_once_with([Path("foo"), "bar"],
+            mocked.assert_called_once_with([Path("foo").absolute(), "bar"],
                                         stderr=subprocess.STDOUT)
         """,
         dummy_config,
@@ -386,7 +386,7 @@ def test_run_component_set_platform_or_engine(
             '"-c", ".platforms[.type == \'docker\'].target_tag := \'test\'"%s%s, "--", "bar"]',
             "--",
         ),
-        ("dummy_config_with_info", "", '[Path("foo"), "bar"%s%s]', "---"),
+        ("dummy_config_with_info", "", '[Path("foo").absolute(), "bar"%s%s]', "---"),
     ],
 )
 def test_run_component_executes_subprocess(
@@ -457,7 +457,7 @@ def test_run_component_executable_does_not_exist_raises(
         def test_loading_run_component(mocker, run_component):
             mocked = mocker.patch('viashpy._run.check_output')
             run_component(["bar"])
-            mocked.assert_called_once_with([Path("foo"), "bar"],
+            mocked.assert_called_once_with([Path("foo").absolute(), "bar"],
                                         stderr=subprocess.STDOUT)
         """,
         dummy_config_with_info,
