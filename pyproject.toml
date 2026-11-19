@@ -6,7 +6,7 @@ build-backend = 'setuptools.build_meta'
 write_to = "viashpy/__version__.py"
 
 [tool.black]
-target-version = ['py310', 'py311', 'py312', 'py313', 'py314']
+target-version = ['py311', 'py312', 'py313', 'py314', 'py315']
 exclude = '''
 (
   \.egg
@@ -20,7 +20,7 @@ exclude = '''
 '''
 
 [tool.pytest.ini_options]
-minversion = "6.0"
+minversion = "7.0"
 testpaths = [
     "tests/unittests"
 ]
