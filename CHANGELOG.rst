@@ -2,6 +2,14 @@
 Changelog
 *********
 
+Unreleased
+==========
+
+New Functionality
+-----------------
+
+* Added support for python 3.15
+
 0.10.0 (27/04/2026)
 ==================
 
